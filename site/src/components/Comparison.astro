@@ -53,11 +53,6 @@ const tsHtml = await codeToHtml(tsCode, { lang: "ts", theme: "github-dark" });
       <div class="comparison__code comparison__code--glow">
         <span class="comparison__file-label">hooks.config.ts</span>
         <Fragment set:html={tsHtml} />
-        <div class="comparison__tooltip" aria-hidden="true">
-          <span class="comparison__tooltip-item">.command</span>
-          <span class="comparison__tooltip-item comparison__tooltip-item--muted">.timeout</span>
-          <span class="comparison__tooltip-item comparison__tooltip-item--muted">.description</span>
-        </div>
       </div>
     </div>
   </div>
