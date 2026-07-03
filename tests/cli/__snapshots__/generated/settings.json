@@ -1,0 +1,26 @@
+{
+  "model": "claude-sonnet-4-6",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/typed-claude-hooks/PreToolUse/blockDangerous.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "hooks/typed-claude-hooks/Stop/onStop.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

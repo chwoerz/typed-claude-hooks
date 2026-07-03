@@ -1,0 +1,25 @@
+{
+  "model": "claude-sonnet-4-6",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "echo manual hook"
+          }
+        ]
+      },
+      {
+        "matcher": "Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/typed-claude-hooks/Write/oldHandler.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -1,0 +1,62 @@
+:root {
+  --color-bg: #1c1917;
+  --color-surface: #292524;
+  --color-bg-alt: #211f1d;
+  --color-text: #e7e5e4;
+  --color-text-muted: #a8a29e;
+  --color-amber: #d4a574;
+  --color-amber-dim: rgba(212, 165, 116, 0.12);
+  --color-rose: #c88a8a;
+  --color-green: #8abf7a;
+  --color-code-bg: #171512;
+  --color-border: #3d3530;
+  --color-tooltip-bg: #231f1c;
+
+  --font-display: "Space Grotesk", system-ui, sans-serif;
+  --font-body: "Space Grotesk", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", "Fira Code", ui-monospace, monospace;
+
+  --max-width: 72rem;
+  --content-width: 52rem;
+  --radius: 0px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  font-family: var(--font-body);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+}
+
+code,
+pre {
+  font-family: var(--font-mono);
+}
+
+a {
+  color: var(--color-amber);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+::selection {
+  background: var(--color-amber);
+  color: var(--color-bg);
+}

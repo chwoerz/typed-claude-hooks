@@ -1,0 +1,122 @@
+---
+const steps = [
+  {
+    command: "npx typed-claude-hooks init",
+    label: "Scaffolds a hooks.config.ts with an example hook.",
+  },
+  {
+    command: "npx typed-claude-hooks build -o .claude/settings.json",
+    label: "Compiles your hooks and generates settings.json.",
+  },
+];
+---
+
+<section id="quickstart" class="quickstart">
+  <div class="quickstart__content">
+    <h2 class="quickstart__title">Get started in 30 seconds</h2>
+
+    <div class="quickstart__steps">
+      {
+        steps.map((step, i) => (
+          <div class="quickstart__step">
+            <span class="quickstart__num">{i + 1}</span>
+            <div class="quickstart__body">
+              {step.command && <code class="quickstart__command">
+                <span class="quickstart__prompt">$</span> {step.command}
+              </code>}
+              <span class="quickstart__label">{step.label}</span>
+            </div>
+          </div>
+        ))
+      }
+    </div>
+
+    <p class="quickstart__done">That's it. Your hooks are live.</p>
+  </div>
+</section>
+
+<style>
+  .quickstart {
+    padding: 3rem 4rem 6rem;
+    background: var(--color-bg-alt);
+    border-top: 1px solid var(--color-border);
+  }
+
+  .quickstart__content {
+    max-width: 40rem;
+    margin: 0 auto;
+  }
+
+  .quickstart__title {
+    font-family: var(--font-display);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 600;
+    margin-bottom: 3rem;
+  }
+
+  .quickstart__steps {
+    display: flex;
+    flex-direction: column;
+    gap: 1.75rem;
+    margin-bottom: 3rem;
+  }
+
+  .quickstart__step {
+    display: flex;
+    align-items: flex-start;
+    gap: 1.25rem;
+  }
+
+  .quickstart__num {
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    color: var(--color-amber);
+    border: 1px solid var(--color-border);
+    width: 1.75rem;
+    height: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 0.15rem;
+  }
+
+  .quickstart__body {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .quickstart__command {
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.98rem;
+    color: var(--color-text);
+    display: block;
+  }
+
+  .quickstart__prompt {
+    color: var(--color-amber);
+    user-select: none;
+  }
+
+  .quickstart__label {
+    font-size: 0.9rem;
+    color: var(--color-text-muted);
+  }
+
+  .quickstart__done {
+    font-family: var(--font-display);
+    font-size: 1.1rem;
+    font-weight: 500;
+    color: var(--color-amber);
+  }
+
+  @media (max-width: 600px) {
+    .quickstart {
+      padding: 3rem 2rem 5rem;
+    }
+  }
+</style>

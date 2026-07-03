@@ -1,0 +1,243 @@
+---
+import { codeToHtml } from "shiki";
+
+const settingsJson = `{
+  "hooks": {
+    "PreToolUse": [{
+      ...
+      "command": ".claude/hooks/block-rm.sh"
+    }]
+  }
+}`;
+
+const bashScript = `#!/bin/bash
+COMMAND=$(jq -r '.tool_input.command')
+if echo "$COMMAND" | grep -q 'rm -rf'; then
+  exit 2
+fi`;
+
+const tsCode = `export const blockRm = defineHandler(
+  "PreToolUse",
+  { matcher: "Bash" },
+  async (input) => {
+    if (input.tool_input.command.includes("rm -rf")) {
+      return { deny: "Blocked" }
+    }
+  }
+)`;
+
+const settingsHtml = await codeToHtml(settingsJson, { lang: "json", theme: "github-dark" });
+const bashHtml = await codeToHtml(bashScript, { lang: "bash", theme: "github-dark" });
+const tsHtml = await codeToHtml(tsCode, { lang: "ts", theme: "github-dark" });
+---
+
+<section class="comparison">
+  <div class="comparison__grid">
+    <h3 class="comparison__side-label comparison__side-label--before">
+      Today — <a href="https://code.claude.com/docs/en/hooks" target="_blank" rel="noopener noreferrer">the official way</a>
+    </h3>
+    <h3 class="comparison__side-label comparison__side-label--after">With typed-claude-hooks</h3>
+
+    <div class="comparison__code-blocks comparison__code-blocks--before">
+      <div class="comparison__code comparison__code--small">
+        <span class="comparison__file-label">settings.json</span>
+        <Fragment set:html={settingsHtml} />
+      </div>
+      <div class="comparison__code">
+        <span class="comparison__file-label">block-rm.sh</span>
+        <Fragment set:html={bashHtml} />
+      </div>
+    </div>
+
+    <div class="comparison__code-blocks comparison__code-blocks--after">
+      <div class="comparison__code comparison__code--glow">
+        <span class="comparison__file-label">hooks.config.ts</span>
+        <Fragment set:html={tsHtml} />
+        <div class="comparison__tooltip" aria-hidden="true">
+          <span class="comparison__tooltip-item">.command</span>
+          <span class="comparison__tooltip-item comparison__tooltip-item--muted">.timeout</span>
+          <span class="comparison__tooltip-item comparison__tooltip-item--muted">.description</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .comparison {
+    padding: 0 4rem 5rem;
+    max-width: 76rem;
+    margin: 0 auto;
+  }
+
+  .comparison__grid {
+    display: grid;
+    grid-template-columns: minmax(0, 0.86fr) minmax(0, 1.14fr);
+    grid-template-rows: auto auto;
+    column-gap: 2rem;
+    row-gap: 0;
+    min-width: 0;
+  }
+
+  .comparison__side-label {
+    font-family: var(--font-mono);
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    margin-bottom: 1.25rem;
+  }
+
+  .comparison__side-label--before {
+    grid-column: 1;
+    grid-row: 1;
+    color: var(--color-rose);
+  }
+
+  .comparison__side-label--before a {
+    color: var(--color-text-muted);
+    text-decoration: none;
+    border-bottom: 1px solid var(--color-border);
+    text-transform: none;
+    letter-spacing: 0;
+    font-weight: 400;
+  }
+
+  .comparison__side-label--before a:hover {
+    color: var(--color-text);
+    border-bottom-color: var(--color-text-muted);
+  }
+
+  .comparison__side-label--after {
+    grid-column: 2;
+    grid-row: 1;
+    color: var(--color-amber);
+  }
+
+  .comparison__code-blocks {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-bottom: 1rem;
+    min-width: 0;
+  }
+
+  .comparison__code-blocks--before {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .comparison__code-blocks--after {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .comparison__code {
+    position: relative;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    min-width: 0;
+  }
+
+  .comparison__code--glow {
+    border-color: var(--color-amber);
+    box-shadow: 0 0 40px rgba(212, 165, 116, 0.08);
+    overflow: visible;
+  }
+
+  .comparison__tooltip {
+    position: absolute;
+    bottom: 1.8rem;
+    right: 5rem;
+    display: flex;
+    flex-direction: column;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.2rem 0;
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    pointer-events: none;
+  }
+
+  .comparison__tooltip-item {
+    padding: 0.15rem 0.6rem;
+    color: var(--color-amber);
+  }
+
+  .comparison__tooltip-item--muted {
+    color: var(--color-text-muted);
+  }
+
+  .comparison__code--small :global(pre) {
+    padding: 0.85rem 1rem;
+    font-size: 0.8rem;
+    line-height: 1.45;
+  }
+
+  .comparison__file-label {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+    font-family: var(--font-mono);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+  }
+
+  .comparison__code--small .comparison__file-label {
+    top: 0.35rem;
+    right: 0.5rem;
+    font-size: 0.68rem;
+  }
+
+  .comparison__code :global(pre) {
+    margin: 0;
+    padding: 1.15rem 1.35rem;
+    background: transparent !important;
+    font-size: 0.92rem;
+    line-height: 1.58;
+    overflow-x: auto;
+  }
+
+  @media (max-width: 768px) {
+    .comparison {
+      padding: 0 2rem 4rem;
+    }
+
+    .comparison__grid {
+      grid-template-columns: 1fr;
+      overflow: hidden;
+    }
+
+    .comparison__code-blocks,
+    .comparison__code {
+      width: 100%;
+    }
+
+    .comparison__side-label--before {
+      grid-row: 1;
+    }
+
+    .comparison__code-blocks--before {
+      grid-row: 2;
+    }
+
+    .comparison__side-label--after {
+      grid-column: 1;
+      grid-row: 3;
+      margin-top: 2rem;
+    }
+
+    .comparison__code-blocks--after {
+      grid-column: 1;
+      grid-row: 4;
+    }
+
+    .comparison__tooltip {
+      display: none;
+    }
+  }
+</style>

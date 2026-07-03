@@ -1,0 +1,208 @@
+<section class="hero">
+  <div class="hero__intro">
+    <div class="hero__header">
+      <p class="hero__eyebrow">typed-claude-hooks</p>
+      <h1 class="hero__title">Type-safe hooks for Claude Code</h1>
+      <p class="hero__subtitle">All 30 events. Fully typesafe - Input and Output.</p>
+
+      <div class="hero__ctas">
+        <button class="hero__install" data-copy="npx typed-claude-hooks init">
+          <span class="hero__prompt">$</span>
+          <code>npx typed-claude-hooks init</code>
+          <span class="hero__copy-hint">click to copy</span>
+        </button>
+        <a class="hero__started" href="#quickstart">Get started ↓</a>
+        <a
+          class="hero__github"
+          href="https://github.com/anthropics/typed-claude-hooks"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View on GitHub →
+        </a>
+      </div>
+    </div>
+
+    <ul class="hero__benefits" aria-label="typed-claude-hooks benefits">
+      <li class="hero__benefit">
+        <strong>Full autocomplete</strong>
+        <span>Every property on every event, right in your editor.</span>
+      </li>
+      <li class="hero__benefit">
+        <strong>Smart type narrowing</strong>
+        <span>Pass <code>{`{ matcher: "Bash" }`}</code>, get <code>BashInput</code>. Types follow the matcher.</span>
+      </li>
+      <li class="hero__benefit">
+        <strong>One build command</strong>
+        <span>Compiles TypeScript, generates shell wrappers, updates settings.json.</span>
+      </li>
+    </ul>
+  </div>
+
+</section>
+
+<script>
+  document.querySelector("[data-copy]")?.addEventListener("click", async (e) => {
+    const btn = (e.currentTarget as HTMLElement);
+    const text = btn.dataset.copy!;
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      return;
+    }
+    const hint = btn.querySelector(".hero__copy-hint");
+    if (hint) {
+      hint.textContent = "copied!";
+      setTimeout(() => { hint.textContent = "click to copy"; }, 2000);
+    }
+  });
+</script>
+
+<style>
+  .hero {
+    padding: 3rem 4rem 0;
+    max-width: 76rem;
+    margin: 0 auto;
+  }
+
+  .hero__intro {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(19rem, 0.95fr);
+    gap: 2rem;
+    align-items: start;
+    margin-bottom: 1rem;
+  }
+
+  .hero__header {
+    max-width: 42rem;
+  }
+
+  .hero__eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.95rem;
+    color: var(--color-amber);
+    letter-spacing: 0.05em;
+    margin-bottom: 1.25rem;
+  }
+
+  .hero__title {
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 5vw, 4rem);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -0.03em;
+    margin-bottom: 1rem;
+  }
+
+  .hero__subtitle {
+    font-size: 1.25rem;
+    color: var(--color-text-muted);
+    line-height: 1.5;
+  }
+
+  .hero__benefits {
+    display: grid;
+    gap: 0.85rem;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .hero__benefit {
+    padding: 1rem 1.1rem;
+    background: var(--color-amber-dim);
+    border: 1px solid var(--color-border);
+    border-left-color: var(--color-amber);
+  }
+
+  .hero__benefit strong {
+    display: block;
+    font-size: 1rem;
+    margin-bottom: 0.15rem;
+    color: var(--color-amber);
+  }
+
+  .hero__benefit span {
+    color: var(--color-text-muted);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+  .hero__benefit code {
+    font-size: 0.85em;
+    color: var(--color-text);
+  }
+
+  .hero__ctas {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+
+  .hero__install {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: var(--color-code-bg);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius);
+    padding: 0.65rem 1.25rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .hero__install:hover {
+    border-color: var(--color-amber);
+  }
+
+  .hero__prompt {
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: 1rem;
+    user-select: none;
+  }
+
+  .hero__install code {
+    color: var(--color-text);
+    font-size: 1rem;
+  }
+
+  .hero__copy-hint {
+    font-family: var(--font-body);
+    font-size: 0.72rem;
+    color: var(--color-text-muted);
+    position: absolute;
+    bottom: -1.4rem;
+    left: 0;
+  }
+
+  .hero__github {
+    font-size: 1.05rem;
+    font-weight: 500;
+    color: var(--color-amber);
+    padding: 0.65rem 0;
+  }
+
+  .hero__started {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: var(--color-text);
+    padding: 0.65rem 0;
+  }
+
+  @media (max-width: 768px) {
+    .hero {
+      padding: 3rem 2rem 0;
+    }
+
+    .hero__intro {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      margin-bottom: 3rem;
+    }
+
+  }
+</style>
