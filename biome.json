@@ -6,7 +6,13 @@
 		"useIgnoreFile": true
 	},
 	"files": {
-		"includes": ["**", "!!**/dist", "!!site/**", "!!src/types/generated/**"]
+		"includes": [
+			"**",
+			"!!**/dist",
+			"!!site/**",
+			"!!src/types/generated/**",
+			"!!tests/cli/__snapshots__/generated/**"
+		]
 	},
 	"formatter": {
 		"enabled": true,

@@ -1,7 +1,8 @@
+import { writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import { Project, SyntaxKind } from "ts-morph";
-import { writeFileSync } from "fs";
-import { resolve, dirname } from "path";
-import { fileURLToPath } from "url";
+import { generateToolInputs } from "./tool-input-mapping.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const PREFIX = "../node_modules/@anthropic-ai/claude-agent-sdk";
@@ -64,7 +65,7 @@ const hooksHeader = `// Auto-extracted from @anthropic-ai/claude-agent-sdk sdk.d
 
 writeFileSync(
   HOOKS_OUTPUT,
-  hooksHeader + "\n" + hookDeclarations.join("\n\n") + "\n",
+  `${hooksHeader}\n${hookDeclarations.join("\n\n")}\n`,
 );
 console.log(
   `Extracted ${hookDeclarations.length} hook declarations → ${HOOKS_OUTPUT}`,
@@ -72,51 +73,10 @@ console.log(
 
 // --- Tool input types from sdk-tools.d.ts ---
 
-const TOOL_INPUT_MAP: Record<string, string> = {
-  Bash: "BashInput",
-  Read: "FileReadInput",
-  Write: "FileWriteInput",
-  Edit: "FileEditInput",
-  Glob: "GlobInput",
-  Grep: "GrepInput",
-  WebFetch: "WebFetchInput",
-  WebSearch: "WebSearchInput",
-  Agent: "AgentInput",
-};
-
-const toolInputNames = new Set(Object.values(TOOL_INPUT_MAP));
 const toolsFile = project.addSourceFileAtPath(SDK_TOOLS_PATH);
-const toolDeclarations: string[] = [];
-
-for (const stmt of toolsFile.getStatements()) {
-  const name =
-    stmt.isKind(SyntaxKind.InterfaceDeclaration) ||
-    stmt.isKind(SyntaxKind.TypeAliasDeclaration)
-      ? stmt.getName()
-      : undefined;
-
-  if (name && toolInputNames.has(name)) {
-    toolDeclarations.push(stmt.getText());
-  }
-}
-
-const toolMapEntries = Object.entries(TOOL_INPUT_MAP)
-  .map(([toolName, typeName]) => `  ${toolName}: ${typeName};`)
-  .join("\n");
-
-const toolOutput = `// Auto-extracted from @anthropic-ai/claude-agent-sdk sdk-tools.d.ts
-// Do not edit manually — regenerate with: npm run extract-types
-
-${toolDeclarations.join("\n\n")}
-
-export interface ToolInputMap {
-${toolMapEntries}
-}
-
-export type BuiltinToolName = keyof ToolInputMap;
-`;
+const toolOutput = generateToolInputs(toolsFile);
 
 writeFileSync(TOOL_INPUTS_OUTPUT, toolOutput);
 console.log(
-  `Extracted ${toolDeclarations.length} tool input types → ${TOOL_INPUTS_OUTPUT}`,
+  `Extracted ${toolsFile.getInterfaces().filter((declaration) => declaration.getName().endsWith("Input")).length} tool input types → ${TOOL_INPUTS_OUTPUT}`,
 );

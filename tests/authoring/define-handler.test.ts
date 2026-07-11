@@ -80,6 +80,17 @@ describe("defineHandler", () => {
     expect(handler.matcher).toBe("Bash");
   });
 
+  it.each([
+    "PostToolUseFailure",
+    "PermissionRequest",
+    "PermissionDenied",
+  ] as const)("narrows tool_input for %s", (event) => {
+    defineHandler(event, { matcher: "Bash" }, async (input) => {
+      expectTypeOf(input.tool_input).toEqualTypeOf<BashInput>();
+      return {};
+    });
+  });
+
   it("stores timeout from options without matcher", () => {
     const handler = defineHandler("Stop", { timeout: 5000 }, async () => ({}));
 

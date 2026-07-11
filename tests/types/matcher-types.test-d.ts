@@ -7,6 +7,7 @@ import type {
 import type {
   NarrowedToolInput,
   ParseMatcher,
+  ToolHookEvent,
 } from "../../src/types/mapping.js";
 
 describe("ParseMatcher", () => {
@@ -40,6 +41,33 @@ describe("NarrowedToolInput", () => {
       FileWriteInput | FileEditInput
     >();
     expectTypeOf<Result["tool_name"]>().toEqualTypeOf<"Write" | "Edit">();
+  });
+
+  it("correlates tool_name with tool_input for union matchers", () => {
+    const narrow = (input: NarrowedToolInput<"PreToolUse", "Write|Edit">) => {
+      if (input.tool_name === "Write") {
+        expectTypeOf(input.tool_input).toEqualTypeOf<FileWriteInput>();
+      } else {
+        expectTypeOf(input.tool_input).toEqualTypeOf<FileEditInput>();
+      }
+    };
+
+    expectTypeOf(narrow).toBeFunction();
+  });
+
+  it("supports every hook input carrying tool_name and tool_input", () => {
+    expectTypeOf<ToolHookEvent>().toEqualTypeOf<
+      | "PreToolUse"
+      | "PostToolUse"
+      | "PostToolUseFailure"
+      | "PermissionRequest"
+      | "PermissionDenied"
+    >();
+
+    type Events = ToolHookEvent;
+    type Result = NarrowedToolInput<Events, "Bash">;
+    expectTypeOf<Result["tool_input"]>().toEqualTypeOf<BashInput>();
+    expectTypeOf<Result["tool_name"]>().toEqualTypeOf<"Bash">();
   });
 
   it("keeps unknown for non-builtin tool name", () => {

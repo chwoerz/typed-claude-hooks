@@ -44,8 +44,21 @@ describe("extractHandlers", () => {
     });
   });
 
-  it("returns empty array for empty exports", () => {
-    const handlers = extractHandlers({ handlerExports: {} });
-    expect(handlers).toEqual([]);
+  it("maps handler exports directly without grouping by event", () => {
+    const onStop = {
+      event: "Stop" as const,
+      handler: async () => ({}),
+    };
+    const beforeStop = {
+      event: "PreToolUse" as const,
+      matcher: "Bash",
+      handler: async () => ({}),
+    };
+
+    const handlers = extractHandlers({
+      handlerExports: { onStop, beforeStop },
+    });
+
+    expect(handlers.map(({ name }) => name)).toEqual(["onStop", "beforeStop"]);
   });
 });

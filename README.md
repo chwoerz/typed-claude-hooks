@@ -13,7 +13,7 @@ const input = JSON.parse(data);
 
 // no types — typo in field name? silent bug
 if (input.tool_input.comand.includes('rm -rf')) {
-  process.stdout.write(JSON.stringify({ decision: 'deny' }));
+  process.exit(2);
 }
 ```
 
@@ -83,9 +83,21 @@ export const logStop = defineHandler("Stop", async (input) => {
 })
 ```
 
+For events with hook-specific output, `hookEventName` is optional while authoring. The generated runtime inserts the handler's event when it is omitted. You can also provide the exact event explicitly, and TypeScript rejects a mismatched event:
+
+```ts
+return {
+  hookSpecificOutput: {
+    hookEventName: "PreToolUse",
+    permissionDecision: "deny" as const,
+    permissionDecisionReason: "Blocked",
+  },
+}
+```
+
 ### `defineHandler(event, fn)` / `defineHandler(event, options, fn)`
 
-Creates a typed handler for a specific hook event. For `PreToolUse` and `PostToolUse`, pass a `matcher` in the options to narrow `tool_input` to the matched tool's type:
+Creates a typed handler for a specific hook event. For all five tool events — `PreToolUse`, `PostToolUse`, `PostToolUseFailure`, `PermissionRequest`, and `PermissionDenied` — pass a `matcher` in the options to narrow `tool_input` to the matched tool's type:
 
 ```ts
 // Matcher narrows tool_input to BashInput — full autocomplete
@@ -105,7 +117,7 @@ export const logAll = defineHandler("PreToolUse", async (input) => { ... })
 export const onStop = defineHandler("Stop", async (input) => { ... })
 ```
 
-Supported tools: `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `WebFetch`, `WebSearch`, `Agent`. MCP and custom tools are accepted as matcher strings but `tool_input` stays `unknown`.
+Built-in tool inputs are typed for file and search tools, shell and web tools, agents and workflows, tasks and todos, planning and worktrees, notebooks and REPL, cron and wakeups, MCP resources, monitoring, notifications, and remote triggers. This includes tools such as `Bash`, `Read`, `Write`, `Edit`, `Glob`, `Grep`, `WebFetch`, `WebSearch`, `Agent`, `AskUserQuestion`, `NotebookEdit`, and the `Task*` tools. Unknown custom matcher names are accepted with `tool_input` typed as `unknown`.
 
 ## Testing Hooks
 
@@ -137,8 +149,21 @@ Compiles hooks and merges them into the target `settings.json`.
 | `[config]`     | `hooks.config.ts`       | Path to the config file                |
 | `-o, --output` | (required)              | Path to the output `settings.json`     |
 | `--hooks-dir`  | `hooks/` next to target | Where to write compiled JS files       |
+| `--runtime`    | `node`                  | Wrapper runtime: `node`, `bun`, or `deno` |
 | `--dry-run`    | `false`                 | Print what would be written            |
 | `--clean`      | `false`                 | Remove generated files before building |
+
+`--runtime` applies only to that build. It is embedded in generated wrappers and is not persisted to the config or `settings.json`; omit it on a later build to return to Node.
+
+Each handler can set `shell: "bash" | "powershell"` in its options. Bash is the default. Every handler always produces a self-contained `.mjs` bundle plus a mandatory `.sh` wrapper for Bash or `.ps1` wrapper for PowerShell. The generated settings entry invokes the wrapper, never the `.mjs` file directly.
+
+```ts
+export const windowsHook = defineHandler(
+  "PreToolUse",
+  { matcher: "Bash", shell: "powershell" },
+  async () => ({}),
+)
+```
 
 ### `typed-claude-hooks init`
 
@@ -146,13 +171,21 @@ Scaffolds a starter `hooks.config.ts` and `tsconfig.json`.
 
 ## How It Works
 
-`typed-claude-hooks build` does four things:
+`typed-claude-hooks build` does three things:
 
 1. **Transpiles** your `.ts` config with esbuild and imports it
-2. **Bundles** each handler into a self-contained `.cjs` file that reads JSON from stdin, calls your handler, and writes JSON to stdout
-3. **Merges** hook entries into `settings.json`, preserving any hand-written hooks
+2. **Bundles** each named handler into a self-contained `.mjs` file and generates its `.sh` or `.ps1` wrapper
+3. **Merges** wrapper commands into `settings.json`, preserving hand-written hooks
 
-Generated hook entries are marked with `"__managed": "typed-claude-hooks"` so they can be cleanly replaced on rebuild without touching your manual hooks.
+For example, `blockRm` generates:
+
+```text
+.claude/hooks/typed-claude-hooks/PreToolUse/
+|-- blockRm.mjs
+`-- blockRm.sh
+```
+
+The settings command points to `blockRm.sh`. Generated commands are recognized by their managed directory and replaced on rebuild without touching manual hooks.
 
 ## Local Development
 

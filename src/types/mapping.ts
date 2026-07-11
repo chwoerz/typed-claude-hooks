@@ -1,126 +1,38 @@
 import type {
-  ConfigChangeHookInput,
-  CwdChangedHookInput,
-  CwdChangedHookSpecificOutput,
-  ElicitationHookInput,
-  ElicitationHookSpecificOutput,
-  ElicitationResultHookInput,
-  ElicitationResultHookSpecificOutput,
-  FileChangedHookInput,
-  FileChangedHookSpecificOutput,
   HookEvent,
-  InstructionsLoadedHookInput,
-  MessageDisplayHookInput,
-  MessageDisplayHookSpecificOutput,
-  NotificationHookInput,
-  NotificationHookSpecificOutput,
-  PermissionDeniedHookInput,
-  PermissionDeniedHookSpecificOutput,
-  PermissionRequestHookInput,
-  PermissionRequestHookSpecificOutput,
-  PostCompactHookInput,
-  PostToolBatchHookInput,
-  PostToolBatchHookSpecificOutput,
-  PostToolUseFailureHookInput,
-  PostToolUseFailureHookSpecificOutput,
-  PostToolUseHookInput,
-  PostToolUseHookSpecificOutput,
-  PreCompactHookInput,
-  PreToolUseHookInput,
-  PreToolUseHookSpecificOutput,
-  SessionEndHookInput,
-  SessionStartHookInput,
-  SessionStartHookSpecificOutput,
-  SetupHookInput,
-  SetupHookSpecificOutput,
-  StopFailureHookInput,
-  StopHookInput,
-  StopHookSpecificOutput,
-  SubagentStartHookInput,
-  SubagentStartHookSpecificOutput,
-  SubagentStopHookInput,
-  SubagentStopHookSpecificOutput,
+  HookInput,
   SyncHookJSONOutput,
-  TaskCompletedHookInput,
-  TaskCreatedHookInput,
-  TeammateIdleHookInput,
-  UserPromptExpansionHookInput,
-  UserPromptExpansionHookSpecificOutput,
-  UserPromptSubmitHookInput,
-  UserPromptSubmitHookSpecificOutput,
-  WorktreeCreateHookInput,
-  WorktreeCreateHookSpecificOutput,
-  WorktreeRemoveHookInput,
 } from "./generated/hooks.js";
 import type { ToolInputMap } from "./generated/tool-inputs.js";
 
-export interface HookInputMap {
-  PreToolUse: PreToolUseHookInput;
-  PostToolUse: PostToolUseHookInput;
-  PostToolUseFailure: PostToolUseFailureHookInput;
-  PostToolBatch: PostToolBatchHookInput;
-  Notification: NotificationHookInput;
-  UserPromptSubmit: UserPromptSubmitHookInput;
-  UserPromptExpansion: UserPromptExpansionHookInput;
-  SessionStart: SessionStartHookInput;
-  SessionEnd: SessionEndHookInput;
-  Stop: StopHookInput;
-  StopFailure: StopFailureHookInput;
-  SubagentStart: SubagentStartHookInput;
-  SubagentStop: SubagentStopHookInput;
-  PreCompact: PreCompactHookInput;
-  PostCompact: PostCompactHookInput;
-  PermissionRequest: PermissionRequestHookInput;
-  PermissionDenied: PermissionDeniedHookInput;
-  Setup: SetupHookInput;
-  TeammateIdle: TeammateIdleHookInput;
-  TaskCreated: TaskCreatedHookInput;
-  TaskCompleted: TaskCompletedHookInput;
-  Elicitation: ElicitationHookInput;
-  ElicitationResult: ElicitationResultHookInput;
-  ConfigChange: ConfigChangeHookInput;
-  InstructionsLoaded: InstructionsLoadedHookInput;
-  WorktreeCreate: WorktreeCreateHookInput;
-  WorktreeRemove: WorktreeRemoveHookInput;
-  CwdChanged: CwdChangedHookInput;
-  FileChanged: FileChangedHookInput;
-  MessageDisplay: MessageDisplayHookInput;
-}
+export type Runtime = "node" | "bun" | "deno";
+
+export type HookInputMap = {
+  [E in HookEvent]: Extract<HookInput, { hook_event_name: E }>;
+};
 
 export type HookInputFor<E extends HookEvent> = E extends keyof HookInputMap
   ? HookInputMap[E]
   : never;
 
-export interface HookSpecificOutputMap {
-  PreToolUse: PreToolUseHookSpecificOutput;
-  PostToolUse: PostToolUseHookSpecificOutput;
-  PostToolUseFailure: PostToolUseFailureHookSpecificOutput;
-  PostToolBatch: PostToolBatchHookSpecificOutput;
-  UserPromptSubmit: UserPromptSubmitHookSpecificOutput;
-  UserPromptExpansion: UserPromptExpansionHookSpecificOutput;
-  SessionStart: SessionStartHookSpecificOutput;
-  Setup: SetupHookSpecificOutput;
-  Stop: StopHookSpecificOutput;
-  SubagentStart: SubagentStartHookSpecificOutput;
-  SubagentStop: SubagentStopHookSpecificOutput;
-  PermissionDenied: PermissionDeniedHookSpecificOutput;
-  Notification: NotificationHookSpecificOutput;
-  PermissionRequest: PermissionRequestHookSpecificOutput;
-  Elicitation: ElicitationHookSpecificOutput;
-  ElicitationResult: ElicitationResultHookSpecificOutput;
-  CwdChanged: CwdChangedHookSpecificOutput;
-  FileChanged: FileChangedHookSpecificOutput;
-  WorktreeCreate: WorktreeCreateHookSpecificOutput;
-  MessageDisplay: MessageDisplayHookSpecificOutput;
-}
+type HookSpecificOutput = NonNullable<SyncHookJSONOutput["hookSpecificOutput"]>;
+
+export type HookSpecificOutputMap = {
+  [E in HookSpecificOutput["hookEventName"]]: Extract<
+    HookSpecificOutput,
+    { hookEventName: E }
+  >;
+};
 
 type NoHookSpecific = Omit<SyncHookJSONOutput, "hookSpecificOutput">;
 export type HookOutputFor<E extends HookEvent> =
   E extends keyof HookSpecificOutputMap
     ? NoHookSpecific & {
-        hookSpecificOutput?: HookSpecificOutputMap[E];
+        hookSpecificOutput?: Omit<HookSpecificOutputMap[E], "hookEventName"> & {
+          hookEventName?: E;
+        };
       }
-    : NoHookSpecific;
+    : NoHookSpecific & { hookSpecificOutput?: never };
 
 export type ParseMatcher<M extends string> =
   M extends `${infer Head}|${infer Tail}` ? Head | ParseMatcher<Tail> : M;
@@ -129,15 +41,32 @@ type ResolveToolInput<Name extends string> = Name extends keyof ToolInputMap
   ? ToolInputMap[Name]
   : unknown;
 
-export type ToolHookEvent = "PreToolUse" | "PostToolUse";
+export type ToolHookEvent = HookInput extends infer Input
+  ? Input extends {
+      hook_event_name: infer E extends HookEvent;
+      tool_name: string;
+      tool_input: unknown;
+    }
+    ? E
+    : never
+  : never;
 
-export type NarrowedToolInput<
+type NarrowedToolInputForName<
   E extends ToolHookEvent,
-  M extends string,
-> = HookInputMap[E] & {
-  tool_name: ParseMatcher<M>;
-  tool_input: ResolveToolInput<ParseMatcher<M>>;
-};
+  Name extends string,
+> = E extends ToolHookEvent
+  ? Omit<HookInputMap[E], "tool_name" | "tool_input"> & {
+      tool_name: Name;
+      tool_input: ResolveToolInput<Name>;
+    }
+  : never;
+
+export type NarrowedToolInput<E extends ToolHookEvent, M extends string> =
+  ParseMatcher<M> extends infer Name extends string
+    ? Name extends ParseMatcher<M>
+      ? NarrowedToolInputForName<E, Name>
+      : never
+    : never;
 
 export interface HandlerOptions {
   matcher?: string;

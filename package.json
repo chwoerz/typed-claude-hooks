@@ -25,15 +25,16 @@
     "dist"
   ],
   "scripts": {
-    "build": "tsc",
+    "clean": "node -e \"require('node:fs').rmSync('dist',{recursive:true,force:true})\"",
+    "build": "npm run clean && tsc",
     "test": "vitest run",
     "test:watch": "vitest",
     "extract-types": "tsx scripts/extract-types.ts",
-    "generate-monaco-dts": "tsx scripts/generate-monaco-dts.ts",
     "format": "biome format --write src/ tests/",
     "lint": "biome lint src/ tests/",
     "check": "biome check src/ tests/",
-    "prepublishOnly": "npm run build"
+    "prepublishOnly": "npm run build",
+    "release": "np"
   },
   "keywords": [
     "claude",
@@ -44,13 +45,14 @@
   "license": "MIT",
   "dependencies": {
     "commander": "^13.0.0",
-    "esbuild": "^0.25.0"
+    "esbuild": "^0.25.0",
+    "ts-morph": "^28.0.0"
   },
   "devDependencies": {
     "@anthropic-ai/claude-agent-sdk": "^0.3.0",
     "@biomejs/biome": "2.5.1",
+    "np": "^11.2.1",
     "prettier": "^3.8.4",
-    "ts-morph": "^28.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.7.0",
     "vitest": "^3.0.0"

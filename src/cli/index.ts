@@ -1,12 +1,24 @@
 #!/usr/bin/env node
 import { Command, Option } from "commander";
-import type { Runtime } from "../compiler/bundle-handlers.js";
+import type { Runtime } from "../types/mapping.js";
 import { build } from "./build.js";
 import { init } from "./init.js";
 
-function run(
-  fn: (...args: unknown[]) => Promise<void>,
-): (...args: unknown[]) => void {
+interface BuildActionOptions {
+  output: string;
+  hooksDir?: string;
+  runtime: Runtime;
+  dryRun: boolean;
+  clean: boolean;
+}
+
+interface InitActionOptions {
+  output?: string;
+}
+
+function run<Args extends unknown[]>(
+  fn: (...args: Args) => Promise<void>,
+): (...args: Args) => void {
   return (...args) => {
     fn(...args).catch((err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
@@ -37,31 +49,15 @@ program
   .option("--dry-run", "Print output without writing", false)
   .option("--clean", "Remove generated files before building", false)
   .action(
-    run((config: unknown, opts: unknown) => {
-      const { output, hooksDir, runtime, dryRun, clean } = opts as Record<
-        string,
-        unknown
-      >;
-      return build({
-        config: config as string,
-        output: output as string,
-        hooksDir: hooksDir as string | undefined,
-        runtime: runtime as Runtime | undefined,
-        dryRun: dryRun as boolean | undefined,
-        clean: clean as boolean | undefined,
-      });
-    }),
+    run((config: string, options: BuildActionOptions) =>
+      build({ config, ...options }),
+    ),
   );
 
 program
   .command("init")
   .description("Create a starter hooks config")
   .option("-o, --output <path>", "Target settings.json path")
-  .action(
-    run((opts: unknown) => {
-      const { output } = opts as Record<string, unknown>;
-      return init({ output: output as string | undefined });
-    }),
-  );
+  .action(run((options: InitActionOptions) => init(options)));
 
 program.parse();

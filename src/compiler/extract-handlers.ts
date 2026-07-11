@@ -7,15 +7,8 @@ export interface HandlerEntry extends HandlerOptions {
 }
 
 export function extractHandlers(loaded: LoadedConfig): HandlerEntry[] {
-  const byEvent = Map.groupBy(
-    Object.entries(loaded.handlerExports),
-    ([, handler]) => handler.event,
-  );
-
-  return [...byEvent.entries()].flatMap(([event, entries]) =>
-    entries.map(([name, handler]) => {
-      const { event: _event, handler: _handler, ...options } = handler;
-      return { ...options, event, name };
-    }),
-  );
+  return Object.entries(loaded.handlerExports).map(([name, handler]) => {
+    const { event, handler: _handler, ...options } = handler;
+    return { ...options, event, name };
+  });
 }

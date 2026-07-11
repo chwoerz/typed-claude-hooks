@@ -6,7 +6,7 @@ const steps = [
   },
   {
     command: "npx typed-claude-hooks build -o .claude/settings.json",
-    label: "Compiles your hooks and generates settings.json.",
+    label: "Generates a self-contained .mjs and shell wrapper (.sh or .ps1) per handler, then updates settings.json. Node is the default runtime.",
   },
 ];
 ---
@@ -31,6 +31,7 @@ const steps = [
       }
     </div>
 
+    <p class="quickstart__note"><code>hookEventName</code> is optional in authored hook output; the runtime injects the handler event when omitted.</p>
     <p class="quickstart__done">That's it. Your hooks are live.</p>
   </div>
 </section>
@@ -112,6 +113,13 @@ const steps = [
     font-size: 1.1rem;
     font-weight: 500;
     color: var(--color-amber);
+  }
+
+  .quickstart__note {
+    margin-bottom: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    line-height: 1.5;
   }
 
   @media (max-width: 600px) {

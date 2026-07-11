@@ -16,13 +16,21 @@ if echo "$COMMAND" | grep -q 'rm -rf'; then
   exit 2
 fi`;
 
-const tsCode = `export const blockRm = defineHandler(
+const tsCode = `import { defineHandler } from "typed-claude-hooks"
+
+export const blockRm = defineHandler(
   "PreToolUse",
   { matcher: "Bash" },
   async (input) => {
     if (input.tool_input.command.includes("rm -rf")) {
-      return { deny: "Blocked" }
+      return {
+        hookSpecificOutput: {
+          permissionDecision: "deny" as const,
+          permissionDecisionReason: "Blocked",
+        },
+      }
     }
+    return {}
   }
 )`;
 
