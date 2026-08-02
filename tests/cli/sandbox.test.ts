@@ -54,7 +54,10 @@ describe("ensureSandbox", () => {
     const sandboxDir = makeSandboxPath();
     ensureSandbox({ sandboxDir, version: "1.0.0", install: vi.fn() });
     writeInstalled(sandboxDir, "1.0.0");
-    const install = vi.fn();
+    const install = vi.fn((dir: string) => {
+      const manifest = JSON.parse(readFileSync(resolve(dir, "package.json"), "utf8"));
+      expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+    });
 
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
