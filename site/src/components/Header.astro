@@ -1,0 +1,78 @@
+---
+const base = `${import.meta.env.BASE_URL}/`;
+const home = base;
+const docs = `${base}docs/`;
+const currentPath = `${Astro.url.pathname.replace(/\/$/, "")}/`;
+---
+
+<header class="header">
+  <nav class="header__nav" aria-label="Primary navigation">
+    <a class="header__brand" href={home}>typed-claude-hooks</a>
+    <div class="header__links">
+      <a href={home} aria-current={currentPath === home ? "page" : undefined}>Home</a>
+      <a href={docs} aria-current={currentPath === docs ? "page" : undefined}>Docs</a>
+      <a href="https://github.com/chwoerz/typed-claude-hooks" target="_blank" rel="noopener noreferrer">GitHub</a>
+      <a href="https://www.npmjs.com/package/typed-claude-hooks" target="_blank" rel="noopener noreferrer">npm</a>
+    </div>
+  </nav>
+</header>
+
+<style>
+  .header {
+    border-bottom: 1px solid var(--color-border);
+    background: rgba(28, 25, 23, 0.92);
+  }
+
+  .header__nav {
+    max-width: var(--max-width);
+    min-height: 4rem;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+
+  .header__brand {
+    color: var(--color-text);
+    font-family: var(--font-mono);
+    font-size: 0.9rem;
+    font-weight: 500;
+  }
+
+  .header__links {
+    display: flex;
+    gap: 1.4rem;
+    font-size: 0.85rem;
+  }
+
+  .header__links a {
+    color: var(--color-text-muted);
+  }
+
+  .header__links a[aria-current="page"] {
+    color: var(--color-text);
+  }
+
+  .header__brand:hover,
+  .header__links a:hover {
+    color: var(--color-amber);
+    text-decoration: none;
+  }
+
+  @media (max-width: 560px) {
+    .header__nav {
+      padding: 0.8rem 1.25rem;
+      align-items: flex-start;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .header__links {
+      width: 100%;
+      justify-content: space-between;
+      gap: 0.75rem;
+    }
+  }
+</style>

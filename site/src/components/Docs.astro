@@ -1,0 +1,401 @@
+---
+import { codeToHtml } from "shiki";
+
+const initializer = `import { defineHandler } from "typed-claude-hooks"
+
+export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
+  if (input.tool_input.file_path.endsWith(".env")) {
+    return {
+      hookSpecificOutput: {
+        permissionDecision: "deny" as const,
+        permissionDecisionReason: "Cannot modify .env files",
+      },
+    }
+  }
+  return {}
+})`;
+
+const testing = `import { testHandler } from "typed-claude-hooks/testing"
+import { protectEnvFiles } from "./hooks.config"
+
+const result = await testHandler(protectEnvFiles, {
+  tool_name: "Write",
+  tool_input: { file_path: ".env", content: "SECRET=123" },
+  tool_use_id: "tool_1",
+})
+
+expect(result.hookSpecificOutput?.permissionDecision).toBe("deny")`;
+
+const powershell = `export const windowsHook = defineHandler(
+  "PreToolUse",
+  { matcher: "Bash", shell: "powershell" },
+  async () => ({}),
+)`;
+
+const [initializerHtml, testingHtml, powershellHtml] = await Promise.all([
+  codeToHtml(initializer, { lang: "ts", theme: "github-dark" }),
+  codeToHtml(testing, { lang: "ts", theme: "github-dark" }),
+  codeToHtml(powershell, { lang: "ts", theme: "github-dark" }),
+]);
+
+const sections = [
+  ["install", "Install and initialize"],
+  ["handlers", "Author handlers"],
+  ["types", "Events and tool inputs"],
+  ["output", "Typed output"],
+  ["testing", "Test handlers"],
+  ["cli", "CLI"],
+  ["generated-files", "Generated files"],
+  ["build-semantics", "Build semantics"],
+] as const;
+
+const eventGroups = [
+  ["Tool lifecycle", ["PreToolUse", "PostToolUse", "PostToolUseFailure", "PostToolBatch", "PermissionRequest", "PermissionDenied"]],
+  ["Session lifecycle", ["SessionStart", "SessionEnd", "Stop", "StopFailure", "Setup", "PreCompact", "PostCompact"]],
+  ["Agents and tasks", ["SubagentStart", "SubagentStop", "TeammateIdle", "TaskCreated", "TaskCompleted"]],
+  ["Interaction", ["Notification", "UserPromptSubmit", "UserPromptExpansion", "Elicitation", "ElicitationResult", "MessageDisplay"]],
+  ["Workspace", ["ConfigChange", "WorktreeCreate", "WorktreeRemove", "InstructionsLoaded", "CwdChanged", "FileChanged"]],
+] as const;
+---
+
+<main id="main-content" class="docs">
+  <aside class="docs__toc" aria-label="Documentation sections">
+    <p>On this page</p>
+    <ol>
+      {sections.map(([id, label]) => <li><a href={`#${id}`}>{label}</a></li>)}
+    </ol>
+  </aside>
+
+  <article class="docs__content">
+    <header class="docs__intro">
+      <p class="docs__eyebrow">Documentation</p>
+      <h1>Typed hooks, generated safely</h1>
+      <p>Author Claude Code hooks as named TypeScript exports, test them as functions, and build runtime-ready wrapper commands.</p>
+    </header>
+
+    <section id="install">
+      <h2>Install and initialize</h2>
+      <p>Install the package, then run the initializer. It creates <code>hooks.config.ts</code> and a strict <code>tsconfig.json</code> when they do not already exist.</p>
+      <div class="docs__command"><span>$</span><code>npm install -D typed-claude-hooks</code></div>
+      <div class="docs__command"><span>$</span><code>npx typed-claude-hooks init</code></div>
+      <p><code>init -o, --output &lt;path&gt;</code> changes only the settings path in the printed follow-up build command; it does not change the files created. The default is <code>.claude/settings.json</code>.</p>
+      <p>The generated config uses the current authoring API:</p>
+      <div class="docs__code"><Fragment set:html={initializerHtml} /></div>
+    </section>
+
+    <section id="handlers">
+      <h2>Author handlers</h2>
+      <p><code>defineHandler</code> is the config authoring API. Export every handler by name; the compiler discovers named exports and groups them by their <code>event</code> field. There is no default config export.</p>
+      <p>Use <code>defineHandler(event, handler)</code> or <code>defineHandler(event, options, handler)</code>. The event selects the exact input and output types.</p>
+    </section>
+
+    <section id="types">
+      <h2>Events and tool inputs</h2>
+      <p>All 30 Claude Code hook events are typed. Five events carry tool data and support matcher-aware narrowing: <code>PreToolUse</code>, <code>PostToolUse</code>, <code>PostToolUseFailure</code>, <code>PermissionRequest</code>, and <code>PermissionDenied</code>.</p>
+      <div class="docs__events">
+        {eventGroups.map(([group, events]) => (
+          <div>
+            <h3>{group}</h3>
+            <ul>{events.map((event) => <li><code>{event}</code></li>)}</ul>
+          </div>
+        ))}
+      </div>
+      <p>A matcher such as <code>{`{ matcher: "Bash" }`}</code> narrows <code>tool_input</code> to <code>BashInput</code>. Union matchers such as <code>Write|Edit</code> produce a matching input union. The included SDK map covers 34 built-in tool inputs; custom matcher names remain valid with <code>tool_input</code> typed as <code>unknown</code>.</p>
+    </section>
+
+    <section id="output">
+      <h2>Typed output</h2>
+      <p>Hook output is constrained to the selected event. For events with <code>hookSpecificOutput</code>, <code>hookEventName</code> is optional while authoring and is strongly typed if supplied. The generated runtime injects the input event name when the property is omitted.</p>
+    </section>
+
+    <section id="testing">
+      <h2>Test handlers</h2>
+      <p><code>testHandler</code> invokes a handler directly without stdin, stdout, or a subprocess. It fills <code>session_id</code>, <code>cwd</code>, and <code>transcript_path</code> with test defaults; provide the event-specific fields.</p>
+      <div class="docs__code"><Fragment set:html={testingHtml} /></div>
+    </section>
+
+    <section id="cli">
+      <h2>CLI</h2>
+      <p>Build with <code>npx typed-claude-hooks build [config] -o &lt;settings.json&gt;</code>. The build command currently has four inputs:</p>
+      <div class="docs__table-wrap">
+        <table>
+          <thead><tr><th>Input</th><th>Default</th><th>Purpose</th></tr></thead>
+          <tbody>
+            <tr><td><code>[config]</code></td><td><code>hooks.config.ts</code></td><td>Config path</td></tr>
+            <tr><td><code>-o, --output</code></td><td>Required</td><td>Target settings file</td></tr>
+            <tr><td><code>--hooks-dir</code></td><td><code>hooks/</code> beside settings</td><td>Generated hooks root</td></tr>
+            <tr><td><code>--runtime</code></td><td><code>node</code></td><td><code>node</code>, <code>bun</code>, or <code>deno</code></td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Runtime selection is CLI-only and applies to that build. It is not persisted in config or settings, so a later build without <code>--runtime</code> returns to Node.</p>
+    </section>
+
+    <section id="generated-files">
+      <h2>Generated files</h2>
+      <p>Every handler produces a self-contained <code>.mjs</code> bundle and a mandatory shell wrapper. Bash is the default and generates <code>.sh</code>; select PowerShell per handler to generate <code>.ps1</code>:</p>
+      <div class="docs__code"><Fragment set:html={powershellHtml} /></div>
+      <pre class="docs__tree"><code>{`.claude/
+|-- settings.json
+\`-- hooks/
+    \`-- typed-claude-hooks/
+        \`-- PreToolUse/
+            |-- protectEnvFiles.mjs
+            \`-- protectEnvFiles.sh`}</code></pre>
+      <p>Generated settings commands always invoke the <code>.sh</code> or <code>.ps1</code> wrapper, never the <code>.mjs</code> bundle directly. The wrapper checks the selected runtime and launches the adjacent bundle.</p>
+    </section>
+
+    <section id="build-semantics">
+      <h2>Build semantics</h2>
+      <p>The build first loads and validates the config, extracts handlers, bundles all artifacts in memory, parses existing settings, and computes the merged settings. Validation errors therefore leave existing generated output untouched.</p>
+      <p>After validation succeeds, the build deletes and replaces the exact <code>typed-claude-hooks</code> managed directory under the selected hooks root. It writes generated files and settings directly, while preserving non-managed settings entries. Because these filesystem writes are not transactional, a disk or permission failure during this phase can leave partial generated output or settings that were not updated.</p>
+    </section>
+  </article>
+</main>
+
+<style>
+  .docs {
+    max-width: var(--max-width);
+    margin: 0 auto;
+    padding: 4rem 2rem 7rem;
+    display: grid;
+    grid-template-columns: 13rem minmax(0, 1fr);
+    gap: 4rem;
+  }
+
+  .docs__toc {
+    position: sticky;
+    top: 2rem;
+    align-self: start;
+    border-left: 1px solid var(--color-border);
+    padding-left: 1rem;
+  }
+
+  .docs__toc p,
+  .docs__eyebrow {
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .docs__toc ol {
+    list-style: none;
+    margin-top: 0.75rem;
+  }
+
+  .docs__toc li + li {
+    margin-top: 0.4rem;
+  }
+
+  .docs__toc a {
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+  }
+
+  .docs__content {
+    min-width: 0;
+    max-width: 49rem;
+  }
+
+  .docs__intro {
+    padding-bottom: 3rem;
+    border-bottom: 1px solid var(--color-border);
+  }
+
+  .docs__intro h1 {
+    margin: 0.65rem 0 1rem;
+    font-family: var(--font-display);
+    font-size: clamp(2.4rem, 6vw, 4rem);
+    line-height: 1.05;
+    letter-spacing: -0.035em;
+  }
+
+  .docs__intro > p:last-child,
+  section p {
+    color: var(--color-text-muted);
+  }
+
+  .docs__intro > p:last-child {
+    max-width: 40rem;
+    font-size: 1.1rem;
+  }
+
+  section {
+    padding-top: 3.5rem;
+    scroll-margin-top: 2rem;
+  }
+
+  section h2 {
+    margin-bottom: 1rem;
+    font-size: 1.55rem;
+    line-height: 1.25;
+  }
+
+  section p + p,
+  section p + .docs__code,
+  section p + .docs__table-wrap,
+  section p + .docs__command,
+  .docs__code + p,
+  .docs__tree + p {
+    margin-top: 1rem;
+  }
+
+  p code,
+  td code {
+    color: var(--color-text);
+    font-size: 0.88em;
+  }
+
+  .docs__command,
+  .docs__tree,
+  .docs__code {
+    min-width: 0;
+    border: 1px solid var(--color-border);
+    background: var(--color-code-bg);
+  }
+
+  .docs__command {
+    margin-top: 1.25rem;
+    padding: 0.75rem 1rem;
+    display: flex;
+    gap: 0.65rem;
+    overflow-x: auto;
+  }
+
+  .docs__command + .docs__command {
+    margin-top: 0.6rem;
+  }
+
+  .docs__events {
+    margin: 1.25rem 0;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem 1.5rem;
+  }
+
+  .docs__events h3 {
+    margin-bottom: 0.35rem;
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .docs__events ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem 0.65rem;
+    list-style: none;
+  }
+
+  .docs__events code {
+    color: var(--color-text-muted);
+    font-size: 0.76rem;
+  }
+
+  .docs__command span {
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+  }
+
+  .docs__code {
+    overflow: hidden;
+  }
+
+  .docs__code :global(pre) {
+    margin: 0;
+    padding: 1.2rem;
+    background: transparent !important;
+    overflow-x: auto;
+    font-size: 0.86rem;
+    line-height: 1.6;
+  }
+
+  .docs__tree {
+    margin-top: 1rem;
+    padding: 1rem 1.2rem;
+    overflow-x: auto;
+    color: var(--color-text-muted);
+    font-size: 0.84rem;
+  }
+
+  .docs__table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+  }
+
+  table {
+    width: 100%;
+    min-width: 38rem;
+    border-collapse: collapse;
+    font-size: 0.87rem;
+  }
+
+  th,
+  td {
+    padding: 0.7rem 0.8rem;
+    border-bottom: 1px solid var(--color-border);
+    text-align: left;
+  }
+
+  th {
+    color: var(--color-amber);
+    font-family: var(--font-mono);
+    font-weight: 500;
+  }
+
+  td {
+    color: var(--color-text-muted);
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  @media (max-width: 800px) {
+    .docs {
+      grid-template-columns: 1fr;
+      gap: 2.5rem;
+      padding-top: 2.5rem;
+    }
+
+    .docs__toc {
+      position: static;
+      border-left: 0;
+      border-bottom: 1px solid var(--color-border);
+      padding: 0 0 1.5rem;
+    }
+
+    .docs__toc ol {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.35rem 1rem;
+    }
+
+    .docs__toc li + li {
+      margin-top: 0;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .docs {
+      padding-inline: 1.25rem;
+    }
+
+    .docs__toc ol {
+      grid-template-columns: 1fr;
+    }
+
+    .docs__events {
+      grid-template-columns: 1fr;
+    }
+
+    .docs__code :global(pre) {
+      font-size: 0.76rem;
+    }
+  }
+</style>
