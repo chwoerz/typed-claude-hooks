@@ -39,7 +39,7 @@ const [initializerHtml, testingHtml, powershellHtml] = await Promise.all([
 ]);
 
 const sections = [
-  ["install", "Install and initialize"],
+  ["install", "Install and build"],
   ["handlers", "Author handlers"],
   ["types", "Events and tool inputs"],
   ["output", "Typed output"],
@@ -74,11 +74,12 @@ const eventGroups = [
     </header>
 
     <section id="install">
-      <h2>Install and initialize</h2>
-      <p>Install the package, then run the initializer. It creates <code>hooks.config.ts</code> and a strict <code>tsconfig.json</code> when they do not already exist.</p>
-      <div class="docs__command"><span>$</span><code>npm install -D typed-claude-hooks</code></div>
+      <h2>Install and build</h2>
+      <p>Run the command. On first run it creates a self-contained <code>.typed-claude-hooks/</code> project — <code>package.json</code>, <code>hooks.config.ts</code>, a strict <code>tsconfig.json</code>, and a <code>.gitignore</code> — installs itself into it, and builds. Your project root is never touched, so this works the same in a Python or Go repository.</p>
+      <div class="docs__command"><span>$</span><code>npx typed-claude-hooks</code></div>
+      <p>Existing files are never overwritten. Each run repins and reinstalls the sandbox dependency when its version drifts from the CLI's, leaving any dependencies you added for your own hooks alone. A <code>file:</code> or <code>link:</code> specifier is never rewritten.</p>
+      <p>To scaffold and install without building — no <code>settings.json</code>, no generated hooks — run <code>init</code> instead. It is the same setup step the command above performs on its own, stopped before the build.</p>
       <div class="docs__command"><span>$</span><code>npx typed-claude-hooks init</code></div>
-      <p><code>init -o, --output &lt;path&gt;</code> changes only the settings path in the printed follow-up build command; it does not change the files created. The default is <code>.claude/settings.json</code>.</p>
       <p>The generated config uses the current authoring API:</p>
       <div class="docs__code"><Fragment set:html={initializerHtml} /></div>
     </section>
@@ -116,13 +117,13 @@ const eventGroups = [
 
     <section id="cli">
       <h2>CLI</h2>
-      <p>Build with <code>npx typed-claude-hooks build [config] -o &lt;settings.json&gt;</code>. The build command currently has four inputs:</p>
+      <p>Build with <code>npx typed-claude-hooks [config]</code>. Passing an explicit config path builds that file and skips the sandbox entirely. The command has four inputs:</p>
       <div class="docs__table-wrap">
         <table>
           <thead><tr><th>Input</th><th>Default</th><th>Purpose</th></tr></thead>
           <tbody>
-            <tr><td><code>[config]</code></td><td><code>hooks.config.ts</code></td><td>Config path</td></tr>
-            <tr><td><code>-o, --output</code></td><td>Required</td><td>Target settings file</td></tr>
+            <tr><td><code>[config]</code></td><td><code>.typed-claude-hooks/hooks.config.ts</code></td><td>Config path</td></tr>
+            <tr><td><code>-o, --output</code></td><td><code>.claude/settings.json</code></td><td>Target settings file</td></tr>
             <tr><td><code>--hooks-dir</code></td><td><code>hooks/</code> beside settings</td><td>Generated hooks root</td></tr>
             <tr><td><code>--runtime</code></td><td><code>node</code></td><td><code>node</code>, <code>bun</code>, or <code>deno</code></td></tr>
           </tbody>

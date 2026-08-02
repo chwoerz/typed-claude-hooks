@@ -44,17 +44,24 @@ export const blockRm = defineHandler("PreToolUse", { matcher: "Bash" }, async (i
 ## Quick Start
 
 ```bash
-npm install -D typed-claude-hooks
-npx typed-claude-hooks init
+npx typed-claude-hooks
 ```
 
-This creates a `hooks.config.ts` with an example hook. Edit it, then build:
+That is the whole setup. On first run it creates a self-contained
+`.typed-claude-hooks/` project, installs itself into it, compiles the example
+hook, and writes `.claude/settings.json`:
 
-```bash
-npx typed-claude-hooks build -o .claude/settings.json
+```text
+.typed-claude-hooks/
+|-- package.json
+|-- hooks.config.ts     <- edit this
+|-- tsconfig.json
+`-- node_modules/
 ```
 
-Done. Your hooks are compiled and ready.
+Nothing is added to your project root, so this works the same in a Python or Go
+repository as it does in a TypeScript one. Edit `hooks.config.ts` and run the
+command again to rebuild.
 
 ## Writing Hooks
 
@@ -140,16 +147,20 @@ expect(result.hookSpecificOutput?.permissionDecision).toBe("deny")
 
 ## CLI
 
-### `typed-claude-hooks build [config] -o <target>`
+### `typed-claude-hooks [config]`
 
-Compiles hooks and merges them into the target `settings.json`.
+Scaffolds the sandbox if needed, then compiles hooks and merges them into the target `settings.json`.
 
-| Flag           | Default                 | Description                            |
-|----------------|-------------------------|----------------------------------------|
-| `[config]`     | `hooks.config.ts`       | Path to the config file                |
-| `-o, --output` | (required)              | Path to the output `settings.json`     |
-| `--hooks-dir`  | `hooks/` next to target | Where to write compiled JS files       |
-| `--runtime`    | `node`                  | Wrapper runtime: `node`, `bun`, or `deno` |
+| Flag           | Default                                | Description                               |
+|----------------|-----------------------------------------|-------------------------------------------|
+| `[config]`     | `.typed-claude-hooks/hooks.config.ts`   | Path to the config file                   |
+| `-o, --output` | `.claude/settings.json`                | Path to the output `settings.json`        |
+| `--hooks-dir`  | `hooks/` next to target                | Where to write compiled JS files          |
+| `--runtime`    | `node`                                 | Wrapper runtime: `node`, `bun`, or `deno` |
+
+Passing an explicit `[config]` builds that file and skips the sandbox entirely — nothing is scaffolded and no dependency is installed.
+
+Each run checks that the `typed-claude-hooks` version installed in the sandbox matches the CLI's own. On a mismatch it repins that one dependency and reinstalls; any dependencies you added for your own hooks are preserved. A `file:` or `link:` specifier is never rewritten.
 
 `--runtime` applies only to that build. It is embedded in generated wrappers and is not persisted to the config or `settings.json`; omit it on a later build to return to Node.
 
@@ -165,11 +176,11 @@ export const windowsHook = defineHandler(
 
 ### `typed-claude-hooks init`
 
-Scaffolds a starter `hooks.config.ts` and `tsconfig.json`.
+Scaffolds the sandbox and installs its dependency, then stops. No `settings.json` is written and no hook artifacts are generated — use it when you want the config and its types in place before wiring anything into Claude Code. Existing files are never overwritten; `init` reports them as skipped.
 
 ## How It Works
 
-`typed-claude-hooks build` does three things:
+`typed-claude-hooks` does three things:
 
 1. **Transpiles** your `.ts` config with esbuild and imports it
 2. **Bundles** each named handler into a self-contained `.mjs` file and generates its `.sh` or `.ps1` wrapper
@@ -191,14 +202,14 @@ When working on typed-claude-hooks itself, build and run the CLI from the repo:
 
 ```bash
 npm run build
-node dist/cli/index.js build -o .claude/settings.json
+node dist/cli/index.js
 ```
 
 Or use `npm link` to make the `typed-claude-hooks` command available globally:
 
 ```bash
 npm link
-typed-claude-hooks build -o .claude/settings.json
+typed-claude-hooks
 ```
 
 ## Types

@@ -1,12 +1,14 @@
 ---
 const steps = [
   {
-    command: "npx typed-claude-hooks init",
-    label: "Scaffolds a hooks.config.ts with an example hook.",
+    command: "npx typed-claude-hooks",
+    label:
+      "Creates a self-contained .typed-claude-hooks/ project on first run, installs itself into it, then validates and replaces the managed generated directory with each .mjs bundle and mandatory .sh or .ps1 wrapper. Node is the default runtime.",
   },
   {
-    command: "npx typed-claude-hooks build -o .claude/settings.json",
-    label: "Validates first, then replaces the managed generated directory with each .mjs bundle and mandatory .sh or .ps1 wrapper. Node is the default runtime.",
+    command: "",
+    label:
+      "Edit .typed-claude-hooks/hooks.config.ts and run the command again. Your project root is never touched, so this works the same in a Python or Go repository.",
   },
 ];
 ---
