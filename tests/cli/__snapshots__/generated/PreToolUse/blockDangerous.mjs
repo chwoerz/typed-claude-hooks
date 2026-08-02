@@ -23,26 +23,22 @@ function defineHandler(event, ...rest) {
 }
 
 // <fixture>
-var blockDangerous = /* @__PURE__ */ defineHandler(
-  "PreToolUse",
-  { matcher: "Bash" },
-  async (input) => {
-    const literal = "defineHandler(";
-    const template = `defineHandler(`;
-    if (input.tool_input.command.includes("rm -rf")) {
-      return {
-        hookSpecificOutput: {
-          permissionDecision: "deny",
-          permissionDecisionReason: "No rm -rf allowed"
-        }
-      };
-    }
-    if ("marker" in input) {
-      return { marker: `${localHelper()}:${literal}:${template}` };
-    }
-    return {};
+var blockDangerous = /* @__PURE__ */ defineHandler("PreToolUse", { matcher: "Bash" }, async (input) => {
+  const literal = "defineHandler(";
+  const template = `defineHandler(`;
+  if (input.tool_input.command.includes("rm -rf")) {
+    return {
+      hookSpecificOutput: {
+        permissionDecision: "deny",
+        permissionDecisionReason: "No rm -rf allowed"
+      }
+    };
   }
-);
+  if ("marker" in input) {
+    return { marker: `${localHelper()}:${literal}:${template}` };
+  }
+  return {};
+});
 function localHelper() {
   return "local-define-handler-marker";
 }
