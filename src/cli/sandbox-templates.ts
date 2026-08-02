@@ -3,6 +3,7 @@ import { resolve } from "node:path";
 
 export const SANDBOX_DIR = ".typed-claude-hooks";
 export const CONFIG_FILE_NAME = "hooks.config.ts";
+export const SANDBOX_FILES = ["package.json", CONFIG_FILE_NAME, "tsconfig.json", ".gitignore"] as const;
 
 const CONFIG_TEMPLATE = `import { defineHandler } from "typed-claude-hooks"
 
@@ -48,12 +49,13 @@ function packageJsonTemplate(version: string): string {
 export function scaffoldSandbox(sandboxDir: string, version: string): string[] {
   mkdirSync(sandboxDir, { recursive: true });
 
-  const files: Array<[string, string]> = [
-    ["package.json", packageJsonTemplate(version)],
-    [CONFIG_FILE_NAME, CONFIG_TEMPLATE],
-    ["tsconfig.json", TSCONFIG_TEMPLATE],
-    [".gitignore", GITIGNORE_TEMPLATE],
-  ];
+  const templates: Record<(typeof SANDBOX_FILES)[number], string> = {
+    "package.json": packageJsonTemplate(version),
+    [CONFIG_FILE_NAME]: CONFIG_TEMPLATE,
+    "tsconfig.json": TSCONFIG_TEMPLATE,
+    ".gitignore": GITIGNORE_TEMPLATE,
+  };
+  const files: Array<[string, string]> = SANDBOX_FILES.map((name) => [name, templates[name]]);
 
   return files
     .filter(([name]) => !existsSync(resolve(sandboxDir, name)))

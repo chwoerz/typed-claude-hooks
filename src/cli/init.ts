@@ -1,51 +1,15 @@
-import { existsSync, writeFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
+import { ensureSandbox } from "./sandbox.js";
+import { SANDBOX_DIR, SANDBOX_FILES } from "./sandbox-templates.js";
 
-export interface InitOptions {
-  output?: string;
-}
+export function init(): void {
+  const sandboxDir = resolve(SANDBOX_DIR);
+  const created = ensureSandbox({ sandboxDir });
+  const skipped = SANDBOX_FILES.filter((name) => !created.includes(name));
 
-const CONFIG_TEMPLATE = `import { defineHandler } from "typed-claude-hooks"
-
-export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
-  if (input.tool_input.file_path.endsWith(".env")) {
-    return {
-      hookSpecificOutput: {
-        permissionDecision: "deny" as const,
-        permissionDecisionReason: "Cannot modify .env files",
-      },
-    }
+  for (const name of skipped) {
+    console.log(`Skipped ${relative(process.cwd(), resolve(sandboxDir, name))} (exists)`);
   }
-  return {}
-})
-`;
 
-const TSCONFIG_TEMPLATE = `{
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["hooks.config.ts"]
-}
-`;
-
-function writeIfMissing(path: string, content: string): void {
-  if (existsSync(path)) {
-    console.log(`${path} already exists, skipping.`);
-  } else {
-    writeFileSync(path, content);
-    console.log(`Created ${path}`);
-  }
-}
-
-export async function init(options: InitOptions): Promise<void> {
-  writeIfMissing(resolve("hooks.config.ts"), CONFIG_TEMPLATE);
-  writeIfMissing(resolve("tsconfig.json"), TSCONFIG_TEMPLATE);
-
-  const output = options.output ?? ".claude/settings.json";
-  console.log(`\nBuild with: npx typed-claude-hooks build -o ${output}`);
+  console.log("\nBuild with: npx typed-claude-hooks");
 }

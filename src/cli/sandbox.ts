@@ -9,7 +9,7 @@ export interface EnsureSandboxOptions {
   install?: (sandboxDir: string) => void;
 }
 
-export function ensureSandbox(options: EnsureSandboxOptions): void {
+export function ensureSandbox(options: EnsureSandboxOptions): string[] {
   const { sandboxDir, version = cliVersion, install = npmInstall } = options;
   const created = scaffoldSandbox(sandboxDir, version);
 
@@ -18,9 +18,10 @@ export function ensureSandbox(options: EnsureSandboxOptions): void {
   }
 
   const plan = planDependencySync(readDependencyState(sandboxDir), version);
-  if (plan.action === "skip") return;
+  if (plan.action === "skip") return created;
 
   writeDeclaredSpec(sandboxDir, plan.spec);
   console.log(`Installing typed-claude-hooks@${plan.spec}...`);
   install(sandboxDir);
+  return created;
 }

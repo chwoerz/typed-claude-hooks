@@ -25,18 +25,7 @@ function runCli(runtime?: "bun" | "deno"): string {
   const runtimeArgs = runtime ? ["--runtime", runtime] : [];
   execFileSync(
     process.execPath,
-    [
-      "--import",
-      "tsx",
-      CLI_PATH,
-      "build",
-      FIXTURE_CONFIG,
-      "--output",
-      SETTINGS_PATH,
-      "--hooks-dir",
-      HOOKS_DIR,
-      ...runtimeArgs,
-    ],
+    ["--import", "tsx", CLI_PATH, FIXTURE_CONFIG, "--output", SETTINGS_PATH, "--hooks-dir", HOOKS_DIR, ...runtimeArgs],
     { cwd: process.cwd() },
   );
   return readFileSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"), "utf-8");
@@ -267,7 +256,7 @@ describe("build command", () => {
   it.each(["--dry-run", "--clean"])("rejects removed %s option", (option) => {
     const result = spawnSync(
       process.execPath,
-      ["--import", "tsx", CLI_PATH, "build", FIXTURE_CONFIG, "--output", SETTINGS_PATH, option],
+      ["--import", "tsx", CLI_PATH, FIXTURE_CONFIG, "--output", SETTINGS_PATH, option],
       { cwd: process.cwd(), encoding: "utf-8" },
     );
 
@@ -299,5 +288,18 @@ describe("build command", () => {
     });
 
     expect(result.trim()).toBe("");
+  });
+
+  it("builds by default and exposes only the init subcommand", () => {
+    const result = spawnSync(process.execPath, ["--import", "tsx", CLI_PATH, "--help"], {
+      cwd: process.cwd(),
+      encoding: "utf-8",
+    });
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("[config]");
+    expect(result.stdout).toContain(".claude/settings.json");
+    expect(result.stdout).toContain("init");
+    expect(result.stdout).not.toContain("build [config]");
   });
 });
