@@ -1,0 +1,60 @@
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { resolve } from "node:path";
+
+export const PACKAGE_ROOT = resolve(import.meta.dirname, "../..");
+export const CLI_PATH = resolve(PACKAGE_ROOT, "src/cli/index.ts");
+
+// An absolute path is required here (rather than the bare "tsx" specifier used elsewhere):
+// Node resolves a bare --import specifier from the child process's cwd, which for these
+// tests is a temp project directory with no node_modules of its own.
+const TSX_LOADER = resolve(PACKAGE_ROOT, "node_modules/tsx/dist/loader.mjs");
+const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
+
+const tempDirs: string[] = [];
+
+/**
+ * A temp project whose sandbox already has the repo linked in as its typed-claude-hooks
+ * dependency, declared with a file: specifier. planDependencySync therefore returns "skip",
+ * so these tests never shell out to a real npm install.
+ */
+export function makeProject(prefix: string): string {
+  const tempDir = mkdtempSync(resolve(tmpdir(), prefix));
+  tempDirs.push(tempDir);
+
+  const sandboxDir = resolve(tempDir, ".typed-claude-hooks");
+  const modulesDir = resolve(sandboxDir, "node_modules");
+  mkdirSync(modulesDir, { recursive: true });
+  symlinkSync(PACKAGE_ROOT, resolve(modulesDir, "typed-claude-hooks"), "dir");
+  writeFileSync(
+    resolve(sandboxDir, "package.json"),
+    JSON.stringify({
+      name: "typed-claude-hooks-config",
+      private: true,
+      type: "module",
+      dependencies: { "typed-claude-hooks": `file:${PACKAGE_ROOT}` },
+    }),
+  );
+  return tempDir;
+}
+
+export function cleanupProjects(): void {
+  for (const path of tempDirs) {
+    rmSync(path, { recursive: true, force: true });
+  }
+  tempDirs.length = 0;
+}
+
+export function runCli(cwd: string, args: string[] = []): string {
+  return execFileSync(process.execPath, ["--import", TSX_LOADER, CLI_PATH, ...args], { cwd, encoding: "utf-8" });
+}
+
+/**
+ * The sandbox resolves typed-claude-hooks through the root package main/types fields, which
+ * point into dist/. Build once if it is missing so a clean clone can run these tests.
+ */
+export function ensureBuilt(): void {
+  if (existsSync(resolve(PACKAGE_ROOT, "dist/index.d.ts"))) return;
+  execFileSync(NPM, ["run", "build"], { cwd: PACKAGE_ROOT, stdio: "inherit" });
+}
