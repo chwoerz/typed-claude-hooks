@@ -2,7 +2,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { annotatePureHandlers } from "../../src/compiler/annotate-pure-handlers.js";
 
-const CONFIG_PATH = resolve(import.meta.dirname, "../../hooks.config.ts");
+const CONFIG_PATH = resolve(import.meta.dirname, "../../.typed-claude-hooks/hooks.config.ts");
 
 describe("annotatePureHandlers", () => {
   it("annotates package imports and aliases without changing lexical text", () => {
