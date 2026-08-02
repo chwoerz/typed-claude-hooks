@@ -3,10 +3,7 @@ import { describe, expect, it } from "vitest";
 import { extractHandlers } from "../../src/compiler/extract-handlers.js";
 import { loadConfig } from "../../src/compiler/load-config.js";
 
-const FIXTURE_PATH = resolve(
-  import.meta.dirname,
-  "../fixtures/sample-hooks.config.ts",
-);
+const FIXTURE_PATH = resolve(import.meta.dirname, "../fixtures/sample-hooks.config.ts");
 
 describe("extractHandlers", () => {
   it("extracts handler metadata from loaded config", async () => {

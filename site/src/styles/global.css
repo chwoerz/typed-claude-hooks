@@ -10,7 +10,6 @@
   --color-green: #8abf7a;
   --color-code-bg: #171512;
   --color-border: #3d3530;
-  --color-tooltip-bg: #231f1c;
 
   --font-display: "Space Grotesk", system-ui, sans-serif;
   --font-body: "Space Grotesk", system-ui, sans-serif;
@@ -40,6 +39,7 @@ body {
   color: var(--color-text);
   background: var(--color-bg);
   line-height: 1.6;
+  overflow-wrap: break-word;
 }
 
 code,

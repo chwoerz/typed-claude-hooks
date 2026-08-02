@@ -50,10 +50,7 @@ function isHookEvent(value: unknown): value is HookEvent {
 }
 
 function isHandlerCandidate(value: unknown): boolean {
-  return (
-    isObject(value) &&
-    (Object.hasOwn(value, "event") || Object.hasOwn(value, "handler"))
-  );
+  return isObject(value) && (Object.hasOwn(value, "event") || Object.hasOwn(value, "handler"));
 }
 
 function validateHandler(value: unknown): value is TypedHandler<HookEvent> {
@@ -74,30 +71,21 @@ function validateHandler(value: unknown): value is TypedHandler<HookEvent> {
     async: (option) => typeof option === "boolean",
     asyncRewake: (option) => typeof option === "boolean",
   };
-  const unknownOption = Object.keys(value).find(
-    (key) => !Object.hasOwn(validators, key),
-  );
-  if (unknownOption)
-    throw new Error(`Unknown handler option: ${unknownOption}`);
+  const unknownOption = Object.keys(value).find((key) => !Object.hasOwn(validators, key));
+  if (unknownOption) throw new Error(`Unknown handler option: ${unknownOption}`);
 
-  const invalidOption = Object.entries(value).find(
-    ([key, option]) => !validators[key](option),
-  );
+  const invalidOption = Object.entries(value).find(([key, option]) => !validators[key](option));
   if (invalidOption) {
     throw new Error(`Invalid handler option: ${invalidOption[0]}`);
   }
   return true;
 }
 
-function validateNoDuplicates(
-  handlers: Record<string, TypedHandler<HookEvent>>,
-): void {
+function validateNoDuplicates(handlers: Record<string, TypedHandler<HookEvent>>): void {
   const seen = new Set<TypedHandler<HookEvent>>();
   Object.entries(handlers).forEach(([name, handler]) => {
     if (seen.has(handler)) {
-      throw new Error(
-        `Same handler instance exported multiple times (at least "${name}")`,
-      );
+      throw new Error(`Same handler instance exported multiple times (at least "${name}")`);
     }
     seen.add(handler);
   });
@@ -117,36 +105,21 @@ export async function loadConfig(configPath: string): Promise<LoadedConfig> {
 
   const dataUrl = `data:text/javascript;base64,${Buffer.from(output.contents).toString("base64")}`;
   const moduleExports = (await import(dataUrl)) as Record<string, unknown>;
-  const namedEntries = Object.entries(moduleExports).filter(
-    ([name]) => name !== "default",
-  );
-  const invalidName = namedEntries.find(
-    ([name, value]) => isHandlerCandidate(value) && !IDENTIFIER.test(name),
-  );
+  const namedEntries = Object.entries(moduleExports).filter(([name]) => name !== "default");
+  const invalidName = namedEntries.find(([name, value]) => isHandlerCandidate(value) && !IDENTIFIER.test(name));
   if (invalidName) {
-    throw new Error(
-      `Handler export name ${JSON.stringify(invalidName[0])} must be a valid JavaScript identifier`,
-    );
+    throw new Error(`Handler export name ${JSON.stringify(invalidName[0])} must be a valid JavaScript identifier`);
   }
-  const invalidEntry = namedEntries.find(
-    ([, value]) => isHandlerCandidate(value) && !validateHandler(value),
-  );
+  const invalidEntry = namedEntries.find(([, value]) => isHandlerCandidate(value) && !validateHandler(value));
   if (invalidEntry) {
-    throw new Error(
-      `Invalid handler export ${JSON.stringify(invalidEntry[0])}`,
-    );
+    throw new Error(`Invalid handler export ${JSON.stringify(invalidEntry[0])}`);
   }
 
-  const handlerEntries = namedEntries.filter(([, value]) =>
-    validateHandler(value),
-  );
+  const handlerEntries = namedEntries.filter(([, value]) => validateHandler(value));
   if (handlerEntries.length === 0) {
     throw new Error("Config file has no named handlers");
   }
-  const handlerExports = Object.fromEntries(handlerEntries) as Record<
-    string,
-    TypedHandler<HookEvent>
-  >;
+  const handlerExports = Object.fromEntries(handlerEntries) as Record<string, TypedHandler<HookEvent>>;
   validateNoDuplicates(handlerExports);
   return { handlerExports };
 }

@@ -1,14 +1,7 @@
 import type { BaseHookInput, HookEvent } from "../types/index.js";
-import type {
-  HookInputFor,
-  HookOutputFor,
-  TypedHandler,
-} from "../types/mapping.js";
+import type { HookInputFor, HookOutputFor, TypedHandler } from "../types/mapping.js";
 
-type BaseDefaults = Pick<
-  BaseHookInput,
-  "session_id" | "transcript_path" | "cwd"
->;
+type BaseDefaults = Pick<BaseHookInput, "session_id" | "transcript_path" | "cwd">;
 
 type PartialInput<E extends HookEvent> = Partial<BaseDefaults> &
   Omit<HookInputFor<E>, keyof BaseDefaults | "hook_event_name">;

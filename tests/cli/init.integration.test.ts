@@ -22,19 +22,14 @@ describe("init command", () => {
     tempDirs.push(tempDir);
     const configPath = resolve(tempDir, "hooks.config.ts");
     const tsconfigPath = resolve(tempDir, "tsconfig.json");
-    writeFileSync(
-      resolve(tempDir, "package.json"),
-      JSON.stringify({ private: true, type: "module" }),
-    );
+    writeFileSync(resolve(tempDir, "package.json"), JSON.stringify({ private: true, type: "module" }));
 
     execFileSync(process.execPath, ["--import", TSX_LOADER, CLI_PATH, "init"], {
       cwd: tempDir,
     });
 
     const config = readFileSync(configPath, "utf8");
-    expect(config).toMatch(
-      /export const protectEnvFiles = defineHandler\("PreToolUse"/,
-    );
+    expect(config).toMatch(/export const protectEnvFiles = defineHandler\("PreToolUse"/);
     expect(config).not.toContain("export default");
 
     const tsconfig = JSON.parse(readFileSync(tsconfigPath, "utf8"));
@@ -48,12 +43,7 @@ describe("init command", () => {
 
     execFileSync(
       process.execPath,
-      [
-        resolve(PACKAGE_ROOT, "node_modules/typescript/bin/tsc"),
-        "--noEmit",
-        "--project",
-        tsconfigPath,
-      ],
+      [resolve(PACKAGE_ROOT, "node_modules/typescript/bin/tsc"), "--noEmit", "--project", tsconfigPath],
       { cwd: tempDir },
     );
   });

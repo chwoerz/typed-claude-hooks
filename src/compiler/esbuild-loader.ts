@@ -16,9 +16,7 @@ export function loaderForPath(filePath: string): Loader {
   const extension = extname(filePath).toLowerCase();
   const loader = LOADERS[extension];
   if (!loader) {
-    throw new Error(
-      `Unsupported config file extension: ${extension || "none"}`,
-    );
+    throw new Error(`Unsupported config file extension: ${extension || "none"}`);
   }
   return loader;
 }

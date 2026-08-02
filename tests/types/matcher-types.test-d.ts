@@ -1,14 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
-import type {
-  BashInput,
-  FileEditInput,
-  FileWriteInput,
-} from "../../src/types/generated/tool-inputs.js";
-import type {
-  NarrowedToolInput,
-  ParseMatcher,
-  ToolHookEvent,
-} from "../../src/types/mapping.js";
+import type { BashInput, FileEditInput, FileWriteInput } from "../../src/types/generated/tool-inputs.js";
+import type { NarrowedToolInput, ParseMatcher, ToolHookEvent } from "../../src/types/mapping.js";
 
 describe("ParseMatcher", () => {
   it("parses a single tool name", () => {
@@ -16,15 +8,11 @@ describe("ParseMatcher", () => {
   });
 
   it("parses a union matcher", () => {
-    expectTypeOf<ParseMatcher<"Write|Edit">>().toEqualTypeOf<
-      "Write" | "Edit"
-    >();
+    expectTypeOf<ParseMatcher<"Write|Edit">>().toEqualTypeOf<"Write" | "Edit">();
   });
 
   it("parses triple union", () => {
-    expectTypeOf<ParseMatcher<"Bash|Write|Edit">>().toEqualTypeOf<
-      "Bash" | "Write" | "Edit"
-    >();
+    expectTypeOf<ParseMatcher<"Bash|Write|Edit">>().toEqualTypeOf<"Bash" | "Write" | "Edit">();
   });
 });
 
@@ -37,9 +25,7 @@ describe("NarrowedToolInput", () => {
 
   it("narrows PreToolUse with Write|Edit matcher", () => {
     type Result = NarrowedToolInput<"PreToolUse", "Write|Edit">;
-    expectTypeOf<Result["tool_input"]>().toEqualTypeOf<
-      FileWriteInput | FileEditInput
-    >();
+    expectTypeOf<Result["tool_input"]>().toEqualTypeOf<FileWriteInput | FileEditInput>();
     expectTypeOf<Result["tool_name"]>().toEqualTypeOf<"Write" | "Edit">();
   });
 
@@ -57,11 +43,7 @@ describe("NarrowedToolInput", () => {
 
   it("supports every hook input carrying tool_name and tool_input", () => {
     expectTypeOf<ToolHookEvent>().toEqualTypeOf<
-      | "PreToolUse"
-      | "PostToolUse"
-      | "PostToolUseFailure"
-      | "PermissionRequest"
-      | "PermissionDenied"
+      "PreToolUse" | "PostToolUse" | "PostToolUseFailure" | "PermissionRequest" | "PermissionDenied"
     >();
 
     type Events = ToolHookEvent;

@@ -1,8 +1,4 @@
-import type {
-  HookEvent,
-  HookInput,
-  SyncHookJSONOutput,
-} from "./generated/hooks.js";
+import type { HookEvent, HookInput, SyncHookJSONOutput } from "./generated/hooks.js";
 import type { ToolInputMap } from "./generated/tool-inputs.js";
 
 export type Runtime = "node" | "bun" | "deno";
@@ -11,35 +7,26 @@ export type HookInputMap = {
   [E in HookEvent]: Extract<HookInput, { hook_event_name: E }>;
 };
 
-export type HookInputFor<E extends HookEvent> = E extends keyof HookInputMap
-  ? HookInputMap[E]
-  : never;
+export type HookInputFor<E extends HookEvent> = E extends keyof HookInputMap ? HookInputMap[E] : never;
 
 type HookSpecificOutput = NonNullable<SyncHookJSONOutput["hookSpecificOutput"]>;
 
 export type HookSpecificOutputMap = {
-  [E in HookSpecificOutput["hookEventName"]]: Extract<
-    HookSpecificOutput,
-    { hookEventName: E }
-  >;
+  [E in HookSpecificOutput["hookEventName"]]: Extract<HookSpecificOutput, { hookEventName: E }>;
 };
 
 type NoHookSpecific = Omit<SyncHookJSONOutput, "hookSpecificOutput">;
-export type HookOutputFor<E extends HookEvent> =
-  E extends keyof HookSpecificOutputMap
-    ? NoHookSpecific & {
-        hookSpecificOutput?: Omit<HookSpecificOutputMap[E], "hookEventName"> & {
-          hookEventName?: E;
-        };
-      }
-    : NoHookSpecific & { hookSpecificOutput?: never };
+export type HookOutputFor<E extends HookEvent> = E extends keyof HookSpecificOutputMap
+  ? NoHookSpecific & {
+      hookSpecificOutput?: Omit<HookSpecificOutputMap[E], "hookEventName"> & {
+        hookEventName?: E;
+      };
+    }
+  : NoHookSpecific & { hookSpecificOutput?: never };
 
-export type ParseMatcher<M extends string> =
-  M extends `${infer Head}|${infer Tail}` ? Head | ParseMatcher<Tail> : M;
+export type ParseMatcher<M extends string> = M extends `${infer Head}|${infer Tail}` ? Head | ParseMatcher<Tail> : M;
 
-type ResolveToolInput<Name extends string> = Name extends keyof ToolInputMap
-  ? ToolInputMap[Name]
-  : unknown;
+type ResolveToolInput<Name extends string> = Name extends keyof ToolInputMap ? ToolInputMap[Name] : unknown;
 
 export type ToolHookEvent = HookInput extends infer Input
   ? Input extends {
@@ -51,10 +38,7 @@ export type ToolHookEvent = HookInput extends infer Input
     : never
   : never;
 
-type NarrowedToolInputForName<
-  E extends ToolHookEvent,
-  Name extends string,
-> = E extends ToolHookEvent
+type NarrowedToolInputForName<E extends ToolHookEvent, Name extends string> = E extends ToolHookEvent
   ? Omit<HookInputMap[E], "tool_name" | "tool_input"> & {
       tool_name: Name;
       tool_input: ResolveToolInput<Name>;
@@ -79,8 +63,7 @@ export interface HandlerOptions {
   asyncRewake?: boolean;
 }
 
-export interface TypedHandler<E extends HookEvent>
-  extends Readonly<HandlerOptions> {
+export interface TypedHandler<E extends HookEvent> extends Readonly<HandlerOptions> {
   readonly event: E;
   readonly handler: (input: HookInputFor<E>) => Promise<HookOutputFor<E>>;
 }

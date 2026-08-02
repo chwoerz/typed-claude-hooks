@@ -1,10 +1,9 @@
-import { execFileSync } from "node:child_process";
+import { execFileSync, spawnSync } from "node:child_process";
 import {
-  chmodSync,
   existsSync,
+  linkSync,
   lstatSync,
   mkdirSync,
-  readdirSync,
   readFileSync,
   rmSync,
   statSync,
@@ -15,10 +14,7 @@ import { resolve } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { build } from "../../src/cli/build.js";
 
-const FIXTURE_CONFIG = resolve(
-  import.meta.dirname,
-  "../fixtures/sample-hooks.config.ts",
-);
+const FIXTURE_CONFIG = resolve(import.meta.dirname, "../fixtures/sample-hooks.config.ts");
 const TMP_DIR = resolve(import.meta.dirname, "../fixtures/.tmp-integration");
 const SETTINGS_PATH = resolve(TMP_DIR, "settings.json");
 const HOOKS_DIR = resolve(TMP_DIR, "hooks");
@@ -43,14 +39,11 @@ function runCli(runtime?: "bun" | "deno"): string {
     ],
     { cwd: process.cwd() },
   );
-  return readFileSync(
-    resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"),
-    "utf-8",
-  );
+  return readFileSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"), "utf-8");
 }
 
 interface GeneratedSettings {
-  hooks: Record<string, Array<{ hooks: Array<{ command: string }> }>>;
+  hooks: Record<string, Array<{ hooks: Array<{ command: string }>; matcher?: string }>>;
   model: string;
 }
 
@@ -58,10 +51,7 @@ describe("build command", () => {
   beforeEach(() => {
     rmSync(TMP_DIR, { recursive: true, force: true });
     mkdirSync(TMP_DIR, { recursive: true });
-    writeFileSync(
-      SETTINGS_PATH,
-      JSON.stringify({ model: "claude-sonnet-4-6" }),
-    );
+    writeFileSync(SETTINGS_PATH, JSON.stringify({ model: "claude-sonnet-4-6" }));
   });
 
   afterEach(() => {
@@ -72,9 +62,7 @@ describe("build command", () => {
     const wrapper = runCli();
 
     expect(wrapper).toContain("command -v node");
-    expect(wrapper).toContain(
-      'exec node "$SCRIPT_DIR/blockDangerous.mjs" "$@"',
-    );
+    expect(wrapper).toContain('exec node "$SCRIPT_DIR/blockDangerous.mjs" "$@"');
   });
 
   it.each([
@@ -95,42 +83,25 @@ describe("build command", () => {
     });
 
     expect(existsSync(resolve(MANAGED_DIR, "runtime.mjs"))).toBe(false);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(true);
     expect(existsSync(resolve(MANAGED_DIR, "Stop/onStop.mjs"))).toBe(true);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh")),
-    ).toBe(true);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"))).toBe(true);
     expect(existsSync(resolve(MANAGED_DIR, "Stop/onStop.sh"))).toBe(true);
 
-    const settings = JSON.parse(
-      readFileSync(SETTINGS_PATH, "utf-8"),
-    ) as GeneratedSettings;
+    const settings = JSON.parse(readFileSync(SETTINGS_PATH, "utf-8")) as GeneratedSettings;
     expect(settings.model).toBe("claude-sonnet-4-6");
     expect(settings.hooks.PreToolUse).toHaveLength(1);
     expect(settings.hooks.PreToolUse[0].matcher).toBe("Bash");
-    expect(settings.hooks.PreToolUse[0].hooks[0]).not.toHaveProperty(
-      "__managed",
-    );
+    expect(settings.hooks.PreToolUse[0].hooks[0]).not.toHaveProperty("__managed");
     expect(settings.hooks.Stop).toHaveLength(1);
     const commands = Object.values(settings.hooks).flatMap((matchers) =>
       matchers.flatMap((matcher) => matcher.hooks.map((hook) => hook.command)),
     );
     expect(commands).toEqual(
-      expect.arrayContaining([
-        expect.stringMatching(/^".*\.sh"$/),
-        expect.stringMatching(/^".*\.sh"$/),
-      ]),
+      expect.arrayContaining([expect.stringMatching(/^".*\.sh"$/), expect.stringMatching(/^".*\.sh"$/)]),
     );
-    expect(commands.every((command: string) => !command.includes(".mjs"))).toBe(
-      true,
-    );
-    expect(
-      commands.every(
-        (command: string) => !/^(node|bun|deno)(?:\s|$)/.test(command),
-      ),
-    ).toBe(true);
+    expect(commands.every((command: string) => !command.includes(".mjs"))).toBe(true);
+    expect(commands.every((command: string) => !/^(node|bun|deno)(?:\s|$)/.test(command))).toBe(true);
   });
 
   it("removes stale managed hook files", async () => {
@@ -138,10 +109,7 @@ describe("build command", () => {
     mkdirSync(staleDir, { recursive: true });
     writeFileSync(resolve(staleDir, "oldHandler.mjs"), "console.log('stale');");
     writeFileSync(resolve(staleDir, "oldHandler.sh"), "#!/bin/sh\necho stale");
-    writeFileSync(
-      resolve(HOOKS_DIR, "my-custom-hook.mjs"),
-      "console.log('keep me');",
-    );
+    writeFileSync(resolve(HOOKS_DIR, "my-custom-hook.mjs"), "console.log('keep me');");
 
     await build({
       config: FIXTURE_CONFIG,
@@ -152,58 +120,8 @@ describe("build command", () => {
     expect(existsSync(resolve(staleDir, "oldHandler.mjs"))).toBe(false);
     expect(existsSync(resolve(staleDir, "oldHandler.sh"))).toBe(false);
     expect(existsSync(resolve(HOOKS_DIR, "my-custom-hook.mjs"))).toBe(true);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh")),
-    ).toBe(true);
-  });
-
-  it("dry run does not create absent output directories", async () => {
-    rmSync(TMP_DIR, { recursive: true, force: true });
-
-    await build({
-      config: FIXTURE_CONFIG,
-      output: SETTINGS_PATH,
-      hooksDir: HOOKS_DIR,
-      dryRun: true,
-    });
-
-    expect(existsSync(TMP_DIR)).toBe(false);
-  });
-
-  it("dry run does not remove stale files", async () => {
-    const stalePath = resolve(MANAGED_DIR, "stale.cjs");
-    mkdirSync(MANAGED_DIR, { recursive: true });
-    writeFileSync(stalePath, "keep during planning");
-
-    await build({
-      config: FIXTURE_CONFIG,
-      output: SETTINGS_PATH,
-      hooksDir: HOOKS_DIR,
-      dryRun: true,
-    });
-
-    expect(readFileSync(stalePath, "utf-8")).toBe("keep during planning");
-  });
-
-  it("clean dry run does not mutate existing files", async () => {
-    const stalePath = resolve(MANAGED_DIR, "nested/stale.txt");
-    mkdirSync(resolve(MANAGED_DIR, "nested"), { recursive: true });
-    writeFileSync(stalePath, "keep during planning");
-    const originalSettings = readFileSync(SETTINGS_PATH, "utf-8");
-
-    await build({
-      config: FIXTURE_CONFIG,
-      output: SETTINGS_PATH,
-      hooksDir: HOOKS_DIR,
-      dryRun: true,
-      clean: true,
-    });
-
-    expect(readFileSync(stalePath, "utf-8")).toBe("keep during planning");
-    expect(readFileSync(SETTINGS_PATH, "utf-8")).toBe(originalSettings);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(true);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"))).toBe(true);
   });
 
   it("recursively removes every unexpected entry in the managed directory", async () => {
@@ -223,14 +141,8 @@ describe("build command", () => {
       hooksDir: HOOKS_DIR,
     });
 
-    expect(unexpectedPaths.map((path) => existsSync(path))).toEqual([
-      false,
-      false,
-      false,
-    ]);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
+    expect(unexpectedPaths.map((path) => existsSync(path))).toEqual([false, false, false]);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(true);
   });
 
   it("never removes entries outside the exact managed directory", async () => {
@@ -244,13 +156,26 @@ describe("build command", () => {
       config: FIXTURE_CONFIG,
       output: SETTINGS_PATH,
       hooksDir: HOOKS_DIR,
-      clean: true,
     });
 
     expect(readFileSync(outsidePath, "utf-8")).toBe("preserve");
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(true);
+  });
+
+  it("preserves a similarly named directory outside the managed path", async () => {
+    const outsidePath = resolve(HOOKS_DIR, "typed-claude-hooks-backup/preserve.cjs");
+    mkdirSync(resolve(HOOKS_DIR, "typed-claude-hooks-backup"), {
+      recursive: true,
+    });
+    writeFileSync(outsidePath, "preserve");
+
+    await build({
+      config: FIXTURE_CONFIG,
+      output: SETTINGS_PATH,
+      hooksDir: HOOKS_DIR,
+    });
+
+    expect(readFileSync(outsidePath, "utf-8")).toBe("preserve");
   });
 
   it("replaces a managed-directory symlink without touching its outside target", async () => {
@@ -269,65 +194,7 @@ describe("build command", () => {
 
     expect(readFileSync(outsidePath, "utf-8")).toBe("preserve");
     expect(lstatSync(MANAGED_DIR).isSymbolicLink()).toBe(false);
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
-  });
-
-  it("replaces a nested directory symlink without touching its outside target", async () => {
-    const outsideDir = resolve(TMP_DIR, "outside-event-target");
-    const outsidePath = resolve(outsideDir, "preserve.txt");
-    mkdirSync(MANAGED_DIR, { recursive: true });
-    mkdirSync(outsideDir);
-    writeFileSync(outsidePath, "preserve");
-    symlinkSync(outsideDir, resolve(MANAGED_DIR, "PreToolUse"), "dir");
-
-    await build({
-      config: FIXTURE_CONFIG,
-      output: SETTINGS_PATH,
-      hooksDir: HOOKS_DIR,
-    });
-
-    expect(readFileSync(outsidePath, "utf-8")).toBe("preserve");
-    expect(lstatSync(resolve(MANAGED_DIR, "PreToolUse")).isSymbolicLink()).toBe(
-      false,
-    );
-    expect(
-      existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(true);
-  });
-
-  it("keeps stale files when staging fails", async () => {
-    const stalePath = resolve(MANAGED_DIR, "stale.cjs");
-    const settingsDir = resolve(TMP_DIR, "read-only-settings");
-    const settingsPath = resolve(settingsDir, "settings.json");
-    mkdirSync(MANAGED_DIR, { recursive: true });
-    mkdirSync(settingsDir);
-    writeFileSync(stalePath, "preserve");
-    writeFileSync(settingsPath, JSON.stringify({ model: "before" }));
-    chmodSync(settingsPath, 0o444);
-    chmodSync(settingsDir, 0o555);
-
-    try {
-      await expect(
-        build({
-          config: FIXTURE_CONFIG,
-          output: settingsPath,
-          hooksDir: HOOKS_DIR,
-        }),
-      ).rejects.toThrow();
-
-      expect(readFileSync(stalePath, "utf-8")).toBe("preserve");
-      expect(readFileSync(settingsPath, "utf-8")).toBe(
-        JSON.stringify({ model: "before" }),
-      );
-      expect(
-        readdirSync(HOOKS_DIR).filter((name) => name.endsWith(".tmp")),
-      ).toEqual([]);
-    } finally {
-      chmodSync(settingsDir, 0o755);
-      chmodSync(settingsPath, 0o644);
-    }
+    expect(existsSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(true);
   });
 
   it("writes identical settings on repeated builds", async () => {
@@ -344,27 +211,21 @@ describe("build command", () => {
     expect(readFileSync(SETTINGS_PATH, "utf-8")).toBe(firstSettings);
   });
 
-  it("preserves generated file mtimes on an identical second build", async () => {
+  it("rewrites valid generated artifacts on a successful rebuild", async () => {
     const options = {
       config: FIXTURE_CONFIG,
       output: SETTINGS_PATH,
       hooksDir: HOOKS_DIR,
     };
     await build(options);
-    const generatedPaths = [
-      resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs"),
-      resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh"),
-      SETTINGS_PATH,
-    ];
-    const firstMtimes = generatedPaths.map((path) => statSync(path).mtimeMs);
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 20));
+    const artifactPath = resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs");
+    const originalArtifactPath = resolve(TMP_DIR, "original-artifact.mjs");
+    linkSync(artifactPath, originalArtifactPath);
 
     await build(options);
 
-    expect(generatedPaths.map((path) => statSync(path).mtimeMs)).toEqual(
-      firstMtimes,
-    );
-    expect(lstatSync(generatedPaths[1]).mode & 0o777).toBe(0o755);
+    expect(statSync(artifactPath).ino).not.toBe(statSync(originalArtifactPath).ino);
+    expect(lstatSync(resolve(MANAGED_DIR, "PreToolUse/blockDangerous.sh")).mode & 0o777).toBe(0o755);
   });
 
   it("does not mutate hooks when settings JSON is malformed", async () => {
@@ -378,14 +239,40 @@ describe("build command", () => {
         config: FIXTURE_CONFIG,
         output: SETTINGS_PATH,
         hooksDir: HOOKS_DIR,
-        clean: true,
       }),
     ).rejects.toThrow(`Failed to parse ${SETTINGS_PATH}`);
 
-    expect(readFileSync(stalePath, "utf-8")).toBe(
-      "preserve after parse failure",
-    );
+    expect(readFileSync(stalePath, "utf-8")).toBe("preserve after parse failure");
     expect(readFileSync(SETTINGS_PATH, "utf-8")).toBe("{ malformed");
+  });
+
+  it("does not mutate hooks when config loading fails", async () => {
+    const stalePath = resolve(MANAGED_DIR, "nested/stale.cjs");
+    const malformedConfig = resolve(TMP_DIR, "malformed.config.ts");
+    mkdirSync(resolve(MANAGED_DIR, "nested"), { recursive: true });
+    writeFileSync(stalePath, "preserve after config failure");
+    writeFileSync(malformedConfig, "export const broken = ;");
+
+    await expect(
+      build({
+        config: malformedConfig,
+        output: SETTINGS_PATH,
+        hooksDir: HOOKS_DIR,
+      }),
+    ).rejects.toThrow();
+
+    expect(readFileSync(stalePath, "utf-8")).toBe("preserve after config failure");
+  });
+
+  it.each(["--dry-run", "--clean"])("rejects removed %s option", (option) => {
+    const result = spawnSync(
+      process.execPath,
+      ["--import", "tsx", CLI_PATH, "build", FIXTURE_CONFIG, "--output", SETTINGS_PATH, option],
+      { cwd: process.cwd(), encoding: "utf-8" },
+    );
+
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toContain(`unknown option '${option}'`);
   });
 
   it("compiled handler executes correctly via Node.js", async () => {
@@ -406,10 +293,10 @@ describe("build command", () => {
       tool_use_id: "tu_1",
     });
 
-    const result = execSync(
-      `echo '${stdinPayload}' | node ${resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")}`,
-      { encoding: "utf-8", cwd: MANAGED_DIR },
-    );
+    const result = execSync(`echo '${stdinPayload}' | node ${resolve(MANAGED_DIR, "PreToolUse/blockDangerous.mjs")}`, {
+      encoding: "utf-8",
+      cwd: MANAGED_DIR,
+    });
 
     expect(result.trim()).toBe("");
   });

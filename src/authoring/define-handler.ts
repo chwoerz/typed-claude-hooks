@@ -26,17 +26,12 @@ export function defineHandler<E extends HookEvent>(
   handler: (input: HookInputFor<E>) => Promise<HookOutputFor<E>>,
 ): TypedHandler<E>;
 
-export function defineHandler<E extends HookEvent>(
-  event: E,
-  ...rest: unknown[]
-): TypedHandler<E> {
+export function defineHandler<E extends HookEvent>(event: E, ...rest: unknown[]): TypedHandler<E> {
   const options =
     typeof rest[0] === "object" && rest[0] !== null && !Array.isArray(rest[0])
       ? (rest.shift() as HandlerOptions)
       : undefined;
-  const handler = rest[0] as (
-    input: HookInputFor<E>,
-  ) => Promise<HookOutputFor<E>>;
+  const handler = rest[0] as (input: HookInputFor<E>) => Promise<HookOutputFor<E>>;
 
   return clearUndefineds({
     ...options,

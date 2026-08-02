@@ -1,10 +1,6 @@
 import { describe, expect, expectTypeOf, it } from "vitest";
 import { defineHandler } from "../../src/authoring/define-handler.js";
-import type {
-  BashInput,
-  FileEditInput,
-  FileWriteInput,
-} from "../../src/types/generated/tool-inputs.js";
+import type { BashInput, FileEditInput, FileWriteInput } from "../../src/types/generated/tool-inputs.js";
 
 describe("defineHandler", () => {
   it("creates a TypedHandler with the event and function", () => {
@@ -27,26 +23,18 @@ describe("defineHandler", () => {
   });
 
   it("stores matcher from options for tool events", () => {
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Bash" },
-      async (_input) => {
-        return {};
-      },
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Bash" }, async (_input) => {
+      return {};
+    });
 
     expect(handler.event).toBe("PreToolUse");
     expect(handler.matcher).toBe("Bash");
   });
 
   it("stores union matcher from options", () => {
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Write|Edit" },
-      async (_input) => {
-        return {};
-      },
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (_input) => {
+      return {};
+    });
 
     expect(handler.matcher).toBe("Write|Edit");
   });
@@ -60,22 +48,16 @@ describe("defineHandler", () => {
 
   it("narrows tool_input type for union matcher", () => {
     defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
-      expectTypeOf(input.tool_input).toEqualTypeOf<
-        FileWriteInput | FileEditInput
-      >();
+      expectTypeOf(input.tool_input).toEqualTypeOf<FileWriteInput | FileEditInput>();
       return {};
     });
   });
 
   it("accepts matcher for PostToolUse", () => {
-    const handler = defineHandler(
-      "PostToolUse",
-      { matcher: "Bash" },
-      async (input) => {
-        expectTypeOf(input.tool_input).toEqualTypeOf<BashInput>();
-        return {};
-      },
-    );
+    const handler = defineHandler("PostToolUse", { matcher: "Bash" }, async (input) => {
+      expectTypeOf(input.tool_input).toEqualTypeOf<BashInput>();
+      return {};
+    });
 
     expect(handler.matcher).toBe("Bash");
   });
@@ -100,11 +82,7 @@ describe("defineHandler", () => {
   });
 
   it("stores timeout from options with matcher", () => {
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Bash", timeout: 10000 },
-      async () => ({}),
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Bash", timeout: 10000 }, async () => ({}));
 
     expect(handler.event).toBe("PreToolUse");
     expect(handler.matcher).toBe("Bash");
@@ -118,11 +96,7 @@ describe("defineHandler", () => {
   });
 
   it("stores if from options", () => {
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Bash", if: "Bash(git *)" },
-      async () => ({}),
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Bash", if: "Bash(git *)" }, async () => ({}));
 
     expect(handler.if).toBe("Bash(git *)");
   });
@@ -138,21 +112,13 @@ describe("defineHandler", () => {
   });
 
   it("stores async from options", () => {
-    const handler = defineHandler(
-      "PostToolUse",
-      { matcher: "Bash", async: true },
-      async () => ({}),
-    );
+    const handler = defineHandler("PostToolUse", { matcher: "Bash", async: true }, async () => ({}));
 
     expect(handler.async).toBe(true);
   });
 
   it("stores asyncRewake from options", () => {
-    const handler = defineHandler(
-      "PostToolUse",
-      { matcher: "Bash", asyncRewake: true },
-      async () => ({}),
-    );
+    const handler = defineHandler("PostToolUse", { matcher: "Bash", asyncRewake: true }, async () => ({}));
 
     expect(handler.asyncRewake).toBe(true);
   });

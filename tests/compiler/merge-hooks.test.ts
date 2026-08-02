@@ -7,15 +7,13 @@ describe("mergeHooksIntoSettings", () => {
   const bundledFiles: PlannedArtifact[] = [
     {
       fileName: "blockDangerous.mjs",
-      filePath:
-        "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
+      filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
       event: "PreToolUse",
       name: "blockDangerous",
       runtime: "node",
       wrapper: {
         contents: "wrapper",
-        filePath:
-          "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.sh",
+        filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.sh",
       },
       matcher: "Bash",
       timeout: undefined,
@@ -112,8 +110,7 @@ describe("mergeHooksIntoSettings", () => {
     const oldManaged = preToolUse.find((m: Record<string, unknown>) =>
       m.hooks.some(
         (h: Record<string, unknown>) =>
-          h.command ===
-          `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Write/oldHandler.sh"`,
+          h.command === `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Write/oldHandler.sh"`,
       ),
     );
     expect(oldManaged).toBeUndefined();
@@ -231,15 +228,13 @@ describe("mergeHooksIntoSettings", () => {
     const noWriteHandlers: PlannedArtifact[] = [
       {
         fileName: "blockDangerous.mjs",
-        filePath:
-          "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
+        filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
         event: "PreToolUse",
         name: "blockDangerous",
         runtime: "node",
         wrapper: {
           contents: "wrapper",
-          filePath:
-            "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.sh",
+          filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.sh",
         },
         matcher: "Bash",
         timeout: undefined,
@@ -257,9 +252,7 @@ describe("mergeHooksIntoSettings", () => {
       projectRoot: "/project",
     });
 
-    const writeEntry = result.hooks.PreToolUse.find(
-      (m: Record<string, unknown>) => m.matcher === "Write",
-    );
+    const writeEntry = result.hooks.PreToolUse.find((m: Record<string, unknown>) => m.matcher === "Write");
     expect(writeEntry).toBeUndefined();
   });
 
@@ -334,16 +327,8 @@ describe("mergeHooksIntoSettings", () => {
   });
 
   it.each([
-    [
-      "bash",
-      "onStop.sh",
-      `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Stop/onStop.sh"`,
-    ],
-    [
-      "powershell",
-      "onStop.ps1",
-      `& "\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Stop/onStop.ps1"`,
-    ],
+    ["bash", "onStop.sh", `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Stop/onStop.sh"`],
+    ["powershell", "onStop.ps1", `& "\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Stop/onStop.ps1"`],
   ] as const)("invokes an explicit %s wrapper", (shell, wrapperName, command) => {
     const file = bundledFiles[1];
     const result = mergeHooksIntoSettings({
@@ -398,10 +383,7 @@ describe("mergeHooksIntoSettings", () => {
     expect(result.hooks.Stop[0].hooks[0].command).toBe(auditCommand);
   });
 
-  it.each([
-    "oldHandler.sh",
-    "oldHandler.ps1",
-  ])("removes an exact managed %s wrapper command", (fileName) => {
+  it.each(["oldHandler.sh", "oldHandler.ps1"])("removes an exact managed %s wrapper command", (fileName) => {
     const result = mergeHooksIntoSettings({
       existingSettings: {
         hooks: {
@@ -423,11 +405,7 @@ describe("mergeHooksIntoSettings", () => {
       projectRoot: "/project",
     });
 
-    expect(
-      result.hooks.PreToolUse.some(
-        (entry: { matcher?: string }) => entry.matcher === "Write",
-      ),
-    ).toBe(false);
+    expect(result.hooks.PreToolUse.some((entry: { matcher?: string }) => entry.matcher === "Write")).toBe(false);
   });
 
   it("removes a legacy unquoted managed bash wrapper command", () => {
@@ -452,11 +430,7 @@ describe("mergeHooksIntoSettings", () => {
       projectRoot: "/project",
     });
 
-    expect(
-      result.hooks.PreToolUse.some(
-        (entry: { matcher?: string }) => entry.matcher === "Write",
-      ),
-    ).toBe(false);
+    expect(result.hooks.PreToolUse.some((entry: { matcher?: string }) => entry.matcher === "Write")).toBe(false);
   });
 
   it("replaces an existing managed PowerShell call command", () => {
@@ -482,8 +456,7 @@ describe("mergeHooksIntoSettings", () => {
           shell: "powershell",
           wrapper: {
             ...file.wrapper,
-            filePath:
-              "/project/.claude/hooks/typed-claude-hooks/Stop/onStop.ps1",
+            filePath: "/project/.claude/hooks/typed-claude-hooks/Stop/onStop.ps1",
           },
         },
       ],
@@ -522,9 +495,7 @@ describe("mergeHooksIntoSettings", () => {
     });
 
     expect(result.hooks.PreToolUse[0].hooks).toHaveLength(2);
-    expect(result.hooks.PreToolUse[1].hooks).toEqual([
-      { type: "command", command: "echo second" },
-    ]);
+    expect(result.hooks.PreToolUse[1].hooks).toEqual([{ type: "command", command: "echo second" }]);
   });
 
   it("is idempotent across repeated merges", () => {
@@ -554,8 +525,7 @@ describe("mergeHooksIntoSettings", () => {
           shell: "powershell",
           wrapper: {
             ...file.wrapper,
-            filePath:
-              "/project/.claude\\hooks\\typed-claude-hooks\\Stop\\onStop.ps1",
+            filePath: "/project/.claude\\hooks\\typed-claude-hooks\\Stop\\onStop.ps1",
           },
         },
       ],

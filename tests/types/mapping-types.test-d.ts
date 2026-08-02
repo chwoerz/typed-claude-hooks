@@ -1,11 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
 import type { HookInput } from "../../src/types/generated/hooks.js";
-import type {
-  HookInputFor,
-  HookInputMap,
-  HookOutputFor,
-  HookSpecificOutputMap,
-} from "../../src/types/mapping.js";
+import type { HookInputFor, HookInputMap, HookOutputFor, HookSpecificOutputMap } from "../../src/types/mapping.js";
 
 describe("SDK-derived hook mappings", () => {
   it("maps every input from its SDK discriminant", () => {
@@ -16,12 +11,8 @@ describe("SDK-derived hook mappings", () => {
   });
 
   it("maps specific outputs from their SDK discriminant", () => {
-    expectTypeOf<HookSpecificOutputMap["PreToolUse"]>().toHaveProperty(
-      "hookEventName",
-    );
-    expectTypeOf<
-      keyof HookSpecificOutputMap
-    >().not.toEqualTypeOf<"SessionEnd">();
+    expectTypeOf<HookSpecificOutputMap["PreToolUse"]>().toHaveProperty("hookEventName");
+    expectTypeOf<keyof HookSpecificOutputMap>().not.toEqualTypeOf<"SessionEnd">();
   });
 });
 
@@ -31,9 +22,7 @@ describe("HookOutputFor", () => {
       hookSpecificOutput: { permissionDecision: "deny" },
     } satisfies HookOutputFor<"PreToolUse">;
 
-    expectTypeOf(
-      output.hookSpecificOutput.permissionDecision,
-    ).toEqualTypeOf<"deny">();
+    expectTypeOf(output.hookSpecificOutput.permissionDecision).toEqualTypeOf<"deny">();
   });
 
   it("accepts the exact event hookEventName", () => {
@@ -41,9 +30,7 @@ describe("HookOutputFor", () => {
       hookSpecificOutput: { hookEventName: "PreToolUse" },
     } satisfies HookOutputFor<"PreToolUse">;
 
-    expectTypeOf(
-      output.hookSpecificOutput.hookEventName,
-    ).toEqualTypeOf<"PreToolUse">();
+    expectTypeOf(output.hookSpecificOutput.hookEventName).toEqualTypeOf<"PreToolUse">();
   });
 
   it("rejects another event hookEventName", () => {

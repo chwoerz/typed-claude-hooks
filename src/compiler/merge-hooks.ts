@@ -29,10 +29,7 @@ interface MatcherEntry {
   hooks: HookCommandEntry[];
 }
 
-function createHookCommandEntry(
-  projectRoot: string,
-  f: PlannedArtifact,
-): HookCommandEntry {
+function createHookCommandEntry(projectRoot: string, f: PlannedArtifact): HookCommandEntry {
   const {
     contents: _contents,
     event,
@@ -45,10 +42,7 @@ function createHookCommandEntry(
     ...hookOptions
   } = f;
   const commandPath = wrapper.filePath;
-  const relativeCommandPath = `\${CLAUDE_PROJECT_DIR}/${relative(
-    projectRoot,
-    commandPath,
-  ).replaceAll("\\", "/")}`;
+  const relativeCommandPath = `\${CLAUDE_PROJECT_DIR}/${relative(projectRoot, commandPath).replaceAll("\\", "/")}`;
   const command = `"${relativeCommandPath}"`;
   return clearUndefineds({
     type: "command" as const,
@@ -57,10 +51,7 @@ function createHookCommandEntry(
   });
 }
 
-function buildHookEntries(
-  bundledFiles: PlannedArtifact[],
-  projectRoot: string,
-): Record<string, MatcherEntry[]> {
+function buildHookEntries(bundledFiles: PlannedArtifact[], projectRoot: string): Record<string, MatcherEntry[]> {
   const byEvent = Map.groupBy(bundledFiles, (f) => f.event);
 
   return Object.fromEntries(
@@ -69,9 +60,7 @@ function buildHookEntries(
       const matchers = [...byMatcher.entries()].map(
         ([matcher, matcherFiles]): MatcherEntry => ({
           ...(matcher !== undefined ? { matcher } : {}),
-          hooks: matcherFiles.map((f) =>
-            createHookCommandEntry(projectRoot, f),
-          ),
+          hooks: matcherFiles.map((f) => createHookCommandEntry(projectRoot, f)),
         }),
       );
       return [event, matchers];
@@ -79,17 +68,12 @@ function buildHookEntries(
   );
 }
 
-function isManagedHook(
-  hook: ExistingHookEntry,
-  managedCommandPrefix: string,
-): boolean {
+function isManagedHook(hook: ExistingHookEntry, managedCommandPrefix: string): boolean {
   const { command } = hook;
   return (
     typeof command === "string" &&
-    ((command.startsWith(`"${managedCommandPrefix}`) &&
-      /\.(?:ps1|sh)"$/.test(command)) ||
-      (command.startsWith(`& "${managedCommandPrefix}`) &&
-        /\.ps1"$/.test(command)) ||
+    ((command.startsWith(`"${managedCommandPrefix}`) && /\.(?:ps1|sh)"$/.test(command)) ||
+      (command.startsWith(`& "${managedCommandPrefix}`) && /\.ps1"$/.test(command)) ||
       (command.startsWith(managedCommandPrefix) && /\.sh$/.test(command)))
   );
 }
@@ -104,9 +88,7 @@ function stripManagedFromExisting(
         const cleaned = matchers
           .map((m) => ({
             ...m,
-            hooks: (m.hooks ?? []).filter(
-              (h) => !isManagedHook(h, managedCommandPrefix),
-            ),
+            hooks: (m.hooks ?? []).filter((h) => !isManagedHook(h, managedCommandPrefix)),
           }))
           .filter((m) => m.hooks.length > 0);
         return [event, cleaned] as const;
@@ -115,10 +97,7 @@ function stripManagedFromExisting(
   );
 }
 
-function mergeByMatcher(
-  existing: ExistingMatcherEntry[],
-  managed: MatcherEntry[],
-): ExistingMatcherEntry[] {
+function mergeByMatcher(existing: ExistingMatcherEntry[], managed: MatcherEntry[]): ExistingMatcherEntry[] {
   const managedByMatcher = new Map<string | undefined, MatcherEntry>();
   for (const entry of managed) {
     managedByMatcher.set(entry.matcher, entry);
@@ -137,34 +116,21 @@ function mergeByMatcher(
     }
     return entry;
   });
-  const unmatchedManaged = managed.filter(
-    (entry) => !appended.has(entry.matcher),
-  );
+  const unmatchedManaged = managed.filter((entry) => !appended.has(entry.matcher));
 
   return [...mergedExisting, ...unmatchedManaged];
 }
 
-export function mergeHooksIntoSettings(
-  options: MergeOptions,
-): Record<string, unknown> {
-  const { existingSettings, bundledFiles, managedCommandPrefix, projectRoot } =
-    options;
+export function mergeHooksIntoSettings(options: MergeOptions): Record<string, unknown> {
+  const { existingSettings, bundledFiles, managedCommandPrefix, projectRoot } = options;
   const newHookEntries = buildHookEntries(bundledFiles, projectRoot);
-  const existingHooks = (existingSettings.hooks ?? {}) as Record<
-    string,
-    ExistingMatcherEntry[]
-  >;
+  const existingHooks = (existingSettings.hooks ?? {}) as Record<string, ExistingMatcherEntry[]>;
   const cleaned = stripManagedFromExisting(existingHooks, managedCommandPrefix);
 
-  const allEvents = [
-    ...new Set([...Object.keys(cleaned), ...Object.keys(newHookEntries)]),
-  ];
+  const allEvents = [...new Set([...Object.keys(cleaned), ...Object.keys(newHookEntries)])];
 
   const hooks = Object.fromEntries(
-    allEvents.map((event) => [
-      event,
-      mergeByMatcher(cleaned[event] ?? [], newHookEntries[event] ?? []),
-    ]),
+    allEvents.map((event) => [event, mergeByMatcher(cleaned[event] ?? [], newHookEntries[event] ?? [])]),
   );
 
   return {

@@ -2,22 +2,18 @@ import { describe, expect, it } from "vitest";
 import { defineHandler } from "../../src/authoring/define-handler.js";
 import { testHandler } from "../../src/testing/test-handler.js";
 
-const blockEnv = defineHandler(
-  "PreToolUse",
-  { matcher: "Write" },
-  async (input) => {
-    if (input.tool_input.file_path.endsWith(".env")) {
-      return {
-        hookSpecificOutput: {
-          hookEventName: "PreToolUse",
-          permissionDecision: "deny" as const,
-          permissionDecisionReason: "blocked",
-        },
-      };
-    }
-    return {};
-  },
-);
+const blockEnv = defineHandler("PreToolUse", { matcher: "Write" }, async (input) => {
+  if (input.tool_input.file_path.endsWith(".env")) {
+    return {
+      hookSpecificOutput: {
+        hookEventName: "PreToolUse",
+        permissionDecision: "deny" as const,
+        permissionDecisionReason: "blocked",
+      },
+    };
+  }
+  return {};
+});
 
 describe("testHandler", () => {
   it("calls the handler with auto-filled base fields", async () => {
@@ -53,13 +49,9 @@ describe("testHandler", () => {
   });
 
   it("injects the handler event into hook-specific output", async () => {
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Write" },
-      async () => ({
-        hookSpecificOutput: { permissionDecision: "deny" as const },
-      }),
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Write" }, async () => ({
+      hookSpecificOutput: { permissionDecision: "deny" as const },
+    }));
     const result = await testHandler(handler, {
       tool_name: "Write",
       tool_input: { file_path: ".env", content: "SECRET=1" },
@@ -76,11 +68,7 @@ describe("testHandler", () => {
         permissionDecision: "deny" as const,
       },
     };
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Write" },
-      async () => authorResult,
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Write" }, async () => authorResult);
     const result = await testHandler(handler, {
       tool_name: "Write",
       tool_input: { file_path: ".env", content: "SECRET=1" },
@@ -95,11 +83,7 @@ describe("testHandler", () => {
     const authorResult = {
       hookSpecificOutput: { permissionDecision: "deny" as const },
     };
-    const handler = defineHandler(
-      "PreToolUse",
-      { matcher: "Write" },
-      async () => authorResult,
-    );
+    const handler = defineHandler("PreToolUse", { matcher: "Write" }, async () => authorResult);
 
     const result = await testHandler(handler, {
       tool_name: "Write",

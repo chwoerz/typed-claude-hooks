@@ -16,8 +16,6 @@ describe("loaderForPath", () => {
   });
 
   it("rejects unsupported extensions", () => {
-    expect(() => loaderForPath("config.txt")).toThrow(
-      /unsupported config file extension/i,
-    );
+    expect(() => loaderForPath("config.txt")).toThrow(/unsupported config file extension/i);
   });
 });

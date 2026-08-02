@@ -9,10 +9,7 @@ const PREFIX = "../node_modules/@anthropic-ai/claude-agent-sdk";
 const SDK_PATH = resolve(__dirname, PREFIX, "sdk.d.ts");
 const SDK_TOOLS_PATH = resolve(__dirname, PREFIX, "sdk-tools.d.ts");
 const HOOKS_OUTPUT = resolve(__dirname, "../src/types/generated/hooks.ts");
-const TOOL_INPUTS_OUTPUT = resolve(
-  __dirname,
-  "../src/types/generated/tool-inputs.ts",
-);
+const TOOL_INPUTS_OUTPUT = resolve(__dirname, "../src/types/generated/tool-inputs.ts");
 
 const project = new Project({ skipAddingFilesFromTsConfig: true });
 
@@ -45,8 +42,7 @@ const hookDeclarations: string[] = [];
 
 for (const stmt of sdkFile.getStatements()) {
   const name =
-    stmt.isKind(SyntaxKind.InterfaceDeclaration) ||
-    stmt.isKind(SyntaxKind.TypeAliasDeclaration)
+    stmt.isKind(SyntaxKind.InterfaceDeclaration) || stmt.isKind(SyntaxKind.TypeAliasDeclaration)
       ? stmt.getName()
       : undefined;
 
@@ -63,13 +59,8 @@ const hooksHeader = `// Auto-extracted from @anthropic-ai/claude-agent-sdk sdk.d
 // Do not edit manually — regenerate with: npm run extract-types
 `;
 
-writeFileSync(
-  HOOKS_OUTPUT,
-  `${hooksHeader}\n${hookDeclarations.join("\n\n")}\n`,
-);
-console.log(
-  `Extracted ${hookDeclarations.length} hook declarations → ${HOOKS_OUTPUT}`,
-);
+writeFileSync(HOOKS_OUTPUT, `${hooksHeader}\n${hookDeclarations.join("\n\n")}\n`);
+console.log(`Extracted ${hookDeclarations.length} hook declarations → ${HOOKS_OUTPUT}`);
 
 // --- Tool input types from sdk-tools.d.ts ---
 

@@ -6,7 +6,7 @@ const steps = [
   },
   {
     command: "npx typed-claude-hooks build -o .claude/settings.json",
-    label: "Generates a self-contained .mjs and shell wrapper (.sh or .ps1) per handler, then updates settings.json. Node is the default runtime.",
+    label: "Validates first, then replaces the managed generated directory with each .mjs bundle and mandatory .sh or .ps1 wrapper. Node is the default runtime.",
   },
 ];
 ---
@@ -32,7 +32,7 @@ const steps = [
     </div>
 
     <p class="quickstart__note"><code>hookEventName</code> is optional in authored hook output; the runtime injects the handler event when omitted.</p>
-    <p class="quickstart__done">That's it. Your hooks are live.</p>
+    <p class="quickstart__done">Need runtime options and build details? <a href={`${import.meta.env.BASE_URL}/docs/#cli`}>Read the docs.</a></p>
   </div>
 </section>
 
@@ -96,6 +96,7 @@ const steps = [
     font-size: 0.98rem;
     color: var(--color-text);
     display: block;
+    overflow-wrap: anywhere;
   }
 
   .quickstart__prompt {
@@ -125,6 +126,12 @@ const steps = [
   @media (max-width: 600px) {
     .quickstart {
       padding: 3rem 2rem 5rem;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .quickstart {
+      padding-inline: 1.25rem;
     }
   }
 </style>

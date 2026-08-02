@@ -18,11 +18,7 @@ describe("runtime commands", () => {
 });
 
 describe("generateBashWrapper", () => {
-  it.each([
-    "node",
-    "bun",
-    "deno",
-  ] as const)("checks that %s is installed with a clear error", (runtime) => {
+  it.each(["node", "bun", "deno"] as const)("checks that %s is installed with a clear error", (runtime) => {
     const code = generateBashWrapper("handler.mjs", runtime);
 
     expect(code).toContain(`command -v ${runtime}`);
@@ -41,18 +37,12 @@ describe("generateBashWrapper", () => {
   it("includes Deno execution arguments", () => {
     const code = generateBashWrapper("blockRm.mjs", "deno");
 
-    expect(code).toContain(
-      'exec deno run --allow-all "$SCRIPT_DIR/blockRm.mjs" "$@"',
-    );
+    expect(code).toContain('exec deno run --allow-all "$SCRIPT_DIR/blockRm.mjs" "$@"');
   });
 });
 
 describe("generatePowerShellWrapper", () => {
-  it.each([
-    "node",
-    "bun",
-    "deno",
-  ] as const)("checks that %s is installed with a clear error", (runtime) => {
+  it.each(["node", "bun", "deno"] as const)("checks that %s is installed with a clear error", (runtime) => {
     const code = generatePowerShellWrapper("handler.mjs", runtime);
 
     expect(code).toContain(`Get-Command ${runtime}`);
@@ -63,9 +53,7 @@ describe("generatePowerShellWrapper", () => {
   it("resolves the script directory, forwards arguments, and propagates exit", () => {
     const code = generatePowerShellWrapper("blockRm.mjs", "node");
 
-    expect(code).toContain(
-      "$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path",
-    );
+    expect(code).toContain("$scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path");
     expect(code).toContain("& node $scriptPath @args");
     expect(code).toContain("exit $LASTEXITCODE");
   });

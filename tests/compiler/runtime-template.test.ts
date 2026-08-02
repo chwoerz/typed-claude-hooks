@@ -3,11 +3,7 @@ import { describe, expect, it } from "vitest";
 import { generateRuntime } from "../../src/compiler/runtime-template.js";
 
 function executeRuntime(handlerExpression: string) {
-  const child = spawn(process.execPath, [
-    "--input-type=module",
-    "--eval",
-    generateRuntime(handlerExpression),
-  ]);
+  const child = spawn(process.execPath, ["--input-type=module", "--eval", generateRuntime(handlerExpression)]);
   const stdout: Buffer[] = [];
   const stderr: Buffer[] = [];
 
@@ -15,17 +11,15 @@ function executeRuntime(handlerExpression: string) {
   child.stderr.on("data", (chunk: Buffer) => stderr.push(chunk));
   child.stdin.end(JSON.stringify({ hook_event_name: "PreToolUse" }));
 
-  return new Promise<{ status: number | null; stdout: string; stderr: string }>(
-    (resolve) => {
-      child.on("close", (status) => {
-        resolve({
-          status,
-          stdout: Buffer.concat(stdout).toString(),
-          stderr: Buffer.concat(stderr).toString(),
-        });
+  return new Promise<{ status: number | null; stdout: string; stderr: string }>((resolve) => {
+    child.on("close", (status) => {
+      resolve({
+        status,
+        stdout: Buffer.concat(stdout).toString(),
+        stderr: Buffer.concat(stderr).toString(),
       });
-    },
-  );
+    });
+  });
 }
 
 describe("generateRuntime", () => {
@@ -82,9 +76,7 @@ describe("generateRuntime", () => {
   });
 
   it("reports handler errors without writing output", async () => {
-    const execution = await executeRuntime(
-      "function() { throw new Error('handler failed'); }",
-    );
+    const execution = await executeRuntime("function() { throw new Error('handler failed'); }");
 
     expect(execution.status).toBe(2);
     expect(execution.stdout).toBe("");

@@ -8,17 +8,13 @@ interface BuildActionOptions {
   output: string;
   hooksDir?: string;
   runtime: Runtime;
-  dryRun: boolean;
-  clean: boolean;
 }
 
 interface InitActionOptions {
   output?: string;
 }
 
-function run<Args extends unknown[]>(
-  fn: (...args: Args) => Promise<void>,
-): (...args: Args) => void {
+function run<Args extends unknown[]>(fn: (...args: Args) => Promise<void>): (...args: Args) => void {
   return (...args) => {
     fn(...args).catch((err: unknown) => {
       const message = err instanceof Error ? err.message : String(err);
@@ -30,10 +26,7 @@ function run<Args extends unknown[]>(
 
 const program = new Command();
 
-program
-  .name("typed-claude-hooks")
-  .description("Type-safe Claude Code hooks in TypeScript")
-  .version("0.1.0");
+program.name("typed-claude-hooks").description("Type-safe Claude Code hooks in TypeScript").version("0.1.0");
 
 program
   .command("build")
@@ -42,17 +35,9 @@ program
   .requiredOption("-o, --output <path>", "Path to output settings.json")
   .option("--hooks-dir <dir>", "Where to write compiled JS files")
   .addOption(
-    new Option("--runtime <runtime>", "JavaScript runtime to use")
-      .choices(["node", "bun", "deno"])
-      .default("node"),
+    new Option("--runtime <runtime>", "JavaScript runtime to use").choices(["node", "bun", "deno"]).default("node"),
   )
-  .option("--dry-run", "Print output without writing", false)
-  .option("--clean", "Remove generated files before building", false)
-  .action(
-    run((config: string, options: BuildActionOptions) =>
-      build({ config, ...options }),
-    ),
-  );
+  .action(run((config: string, options: BuildActionOptions) => build({ config, ...options })));
 
 program
   .command("init")

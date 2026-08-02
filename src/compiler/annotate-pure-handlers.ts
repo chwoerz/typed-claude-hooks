@@ -12,22 +12,15 @@ function isAuthoringModule(moduleName: string, configPath: string): boolean {
   if (!moduleName.startsWith(".")) return false;
 
   const importedPath = withoutExtension(resolve(configPath, "..", moduleName));
-  return ["src/index", "src/authoring/define-handler"].some((suffix) =>
-    importedPath.endsWith(`/${suffix}`),
-  );
+  return ["src/index", "src/authoring/define-handler"].some((suffix) => importedPath.endsWith(`/${suffix}`));
 }
 
-export function annotatePureHandlers(
-  source: string,
-  configPath: string,
-): string {
+export function annotatePureHandlers(source: string, configPath: string): string {
   const project = new Project({ useInMemoryFileSystem: true });
   const sourceFile = project.createSourceFile(configPath, source);
   const importSymbols = sourceFile
     .getImportDeclarations()
-    .filter((declaration) =>
-      isAuthoringModule(declaration.getModuleSpecifierValue(), configPath),
-    )
+    .filter((declaration) => isAuthoringModule(declaration.getModuleSpecifierValue(), configPath))
     .flatMap((declaration) => declaration.getNamedImports())
     .filter((specifier) => specifier.getName() === "defineHandler")
     .map((specifier) => specifier.getAliasNode() ?? specifier.getNameNode())

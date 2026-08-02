@@ -1,11 +1,5 @@
 import { execFileSync } from "node:child_process";
-import {
-  existsSync,
-  mkdirSync,
-  readFileSync,
-  rmSync,
-  writeFileSync,
-} from "node:fs";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import * as esbuild from "esbuild";
 import { describe, expect, it, vi } from "vitest";
@@ -13,18 +7,9 @@ import { bundleHandlers } from "../../src/compiler/bundle-handlers.js";
 import { extractHandlers } from "../../src/compiler/extract-handlers.js";
 import { loadConfig } from "../../src/compiler/load-config.js";
 
-const FIXTURE_PATH = resolve(
-  import.meta.dirname,
-  "../fixtures/sample-hooks.config.ts",
-);
-const RE_EXPORT_FIXTURE_PATH = resolve(
-  import.meta.dirname,
-  "../fixtures/configs/re-export.config.ts",
-);
-const RE_EXPORTED_HANDLERS_PATH = resolve(
-  import.meta.dirname,
-  "../fixtures/configs/re-exported-handlers.ts",
-);
+const FIXTURE_PATH = resolve(import.meta.dirname, "../fixtures/sample-hooks.config.ts");
+const RE_EXPORT_FIXTURE_PATH = resolve(import.meta.dirname, "../fixtures/configs/re-export.config.ts");
+const RE_EXPORTED_HANDLERS_PATH = resolve(import.meta.dirname, "../fixtures/configs/re-exported-handlers.ts");
 const OUTPUT_DIR = resolve(import.meta.dirname, "../fixtures/.output-hooks");
 vi.mock("esbuild", async (importOriginal) => {
   const actual = await importOriginal<typeof esbuild>();
@@ -52,9 +37,7 @@ describe("bundleHandlers", () => {
     });
 
     expect(esbuild.build).toHaveBeenCalledTimes(handlers.length);
-    expect(
-      existsSync(resolve(OUTPUT_DIR, "PreToolUse/blockDangerous.mjs")),
-    ).toBe(false);
+    expect(existsSync(resolve(OUTPUT_DIR, "PreToolUse/blockDangerous.mjs"))).toBe(false);
     expect(files).toHaveLength(2);
 
     const blockArtifact = files.find(({ name }) => name === "blockDangerous");
@@ -71,9 +54,7 @@ describe("bundleHandlers", () => {
     expect(stopHandlerCode).toContain("stop-handler-only-marker");
     expect(stopHandlerCode).not.toContain("local-define-handler-marker");
 
-    expect(blockArtifact?.wrapper.filePath).toBe(
-      resolve(OUTPUT_DIR, "PreToolUse/blockDangerous.sh"),
-    );
+    expect(blockArtifact?.wrapper.filePath).toBe(resolve(OUTPUT_DIR, "PreToolUse/blockDangerous.sh"));
     expect(blockArtifact?.wrapper.contents).toContain("command -v node");
 
     expect(files[0].fileName).toBe("blockDangerous.mjs");
@@ -124,9 +105,7 @@ describe("bundleHandlers", () => {
   it("tree-shakes sibling handlers defined in re-exported local modules", async () => {
     const sourceBefore = readFileSync(RE_EXPORTED_HANDLERS_PATH, "utf8");
     expect(sourceBefore).toContain('const unrelatedString = "defineHandler(";');
-    expect(sourceBefore).toContain(
-      "// defineHandler( in an unrelated comment must remain untouched.",
-    );
+    expect(sourceBefore).toContain("// defineHandler( in an unrelated comment must remain untouched.");
     const handlers = extractHandlers(await loadConfig(RE_EXPORT_FIXTURE_PATH));
 
     const files = await bundleHandlers({
@@ -136,20 +115,12 @@ describe("bundleHandlers", () => {
       runtime: "node",
     });
 
-    const preToolUseArtifact = files.find(
-      ({ name }) => name === "reExportedPreToolUse",
-    );
+    const preToolUseArtifact = files.find(({ name }) => name === "reExportedPreToolUse");
     const stopArtifact = files.find(({ name }) => name === "reExportedStop");
-    expect(preToolUseArtifact?.contents).toContain(
-      "re-exported-pre-tool-use-marker",
-    );
-    expect(preToolUseArtifact?.contents).not.toContain(
-      "re-exported-stop-marker",
-    );
+    expect(preToolUseArtifact?.contents).toContain("re-exported-pre-tool-use-marker");
+    expect(preToolUseArtifact?.contents).not.toContain("re-exported-stop-marker");
     expect(stopArtifact?.contents).toContain("re-exported-stop-marker");
-    expect(stopArtifact?.contents).not.toContain(
-      "re-exported-pre-tool-use-marker",
-    );
+    expect(stopArtifact?.contents).not.toContain("re-exported-pre-tool-use-marker");
 
     for (const artifact of files) {
       mkdirSync(dirname(artifact.filePath), { recursive: true });
@@ -206,9 +177,7 @@ describe("bundleHandlers", () => {
       runtime: "deno",
     });
 
-    expect(files[0].wrapper.filePath).toBe(
-      resolve(OUTPUT_DIR, `Stop/onStop${extension}`),
-    );
+    expect(files[0].wrapper.filePath).toBe(resolve(OUTPUT_DIR, `Stop/onStop${extension}`));
     expect(files[0].wrapper.contents).toContain(runtimeCheck);
   });
 });

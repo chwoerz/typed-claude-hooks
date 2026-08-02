@@ -150,8 +150,6 @@ Compiles hooks and merges them into the target `settings.json`.
 | `-o, --output` | (required)              | Path to the output `settings.json`     |
 | `--hooks-dir`  | `hooks/` next to target | Where to write compiled JS files       |
 | `--runtime`    | `node`                  | Wrapper runtime: `node`, `bun`, or `deno` |
-| `--dry-run`    | `false`                 | Print what would be written            |
-| `--clean`      | `false`                 | Remove generated files before building |
 
 `--runtime` applies only to that build. It is embedded in generated wrappers and is not persisted to the config or `settings.json`; omit it on a later build to return to Node.
 

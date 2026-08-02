@@ -3,25 +3,13 @@ import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Project, SyntaxKind } from "ts-morph";
 import { describe, expect, it } from "vitest";
-import {
-  generateToolInputs,
-  mapToolInputNames,
-} from "../../scripts/tool-input-mapping.ts";
+import { generateToolInputs, mapToolInputNames } from "../../scripts/tool-input-mapping.ts";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const SDK_PATH = resolve(
-  __dirname,
-  "../../node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts",
-);
+const SDK_PATH = resolve(__dirname, "../../node_modules/@anthropic-ai/claude-agent-sdk/sdk.d.ts");
 const MAPPING_PATH = resolve(__dirname, "../../src/types/mapping.ts");
-const TOOL_INPUTS_PATH = resolve(
-  __dirname,
-  "../../src/types/generated/tool-inputs.ts",
-);
-const SDK_TOOLS_PATH = resolve(
-  __dirname,
-  "../../node_modules/@anthropic-ai/claude-agent-sdk/sdk-tools.d.ts",
-);
+const TOOL_INPUTS_PATH = resolve(__dirname, "../../src/types/generated/tool-inputs.ts");
+const SDK_TOOLS_PATH = resolve(__dirname, "../../node_modules/@anthropic-ai/claude-agent-sdk/sdk-tools.d.ts");
 
 // Properties we set automatically — not user-configurable.
 const AUTO_SET_PROPERTIES = new Set(["type", "command", "args"]);
@@ -43,21 +31,13 @@ function getSDKCommandHookKeys(): string[] {
   }
   const matcherEntry = indexType.getArrayElementTypeOrThrow();
   const hooksArrayProp = matcherEntry.getPropertyOrThrow("hooks");
-  const hookUnion = hooksArrayProp
-    .getTypeAtLocation(hooksProp)
-    .getArrayElementTypeOrThrow();
+  const hookUnion = hooksArrayProp.getTypeAtLocation(hooksProp).getArrayElementTypeOrThrow();
 
   // Extract the { type: 'command' } variant
   const commandType = hookUnion
     .getUnionTypes()
     .find((t) =>
-      t
-        .getProperties()
-        .some(
-          (p) =>
-            p.getName() === "type" &&
-            p.getTypeAtLocation(hooksProp).isStringLiteral(),
-        ),
+      t.getProperties().some((p) => p.getName() === "type" && p.getTypeAtLocation(hooksProp).isStringLiteral()),
     );
   if (!commandType) {
     throw new Error("SDK Settings hooks type has no command hook variant");
@@ -97,8 +77,7 @@ describe("SDK drift detection", () => {
       .filter(
         (statement) =>
           statement.isExported() &&
-          (statement.isKind(SyntaxKind.InterfaceDeclaration) ||
-            statement.isKind(SyntaxKind.TypeAliasDeclaration)),
+          (statement.isKind(SyntaxKind.InterfaceDeclaration) || statement.isKind(SyntaxKind.TypeAliasDeclaration)),
       )
       .map((statement) => statement.getName())
       .filter((name) => name.endsWith("Input"))
@@ -107,8 +86,7 @@ describe("SDK drift detection", () => {
       .getStatements()
       .filter(
         (statement) =>
-          statement.isKind(SyntaxKind.InterfaceDeclaration) ||
-          statement.isKind(SyntaxKind.TypeAliasDeclaration),
+          statement.isKind(SyntaxKind.InterfaceDeclaration) || statement.isKind(SyntaxKind.TypeAliasDeclaration),
       )
       .map((statement) => statement.getName())
       .filter((name) => name.endsWith("Input"))
@@ -127,15 +105,11 @@ describe("SDK drift detection", () => {
     const project = new Project({ skipAddingFilesFromTsConfig: true });
     const sdkFile = project.addSourceFileAtPath(SDK_TOOLS_PATH);
 
-    expect(readFileSync(TOOL_INPUTS_PATH, "utf8")).toBe(
-      generateToolInputs(sdkFile),
-    );
+    expect(readFileSync(TOOL_INPUTS_PATH, "utf8")).toBe(generateToolInputs(sdkFile));
   });
 
   it("maps tool names deterministically with file aliases", () => {
-    expect(
-      mapToolInputNames(["WebFetchInput", "FileReadInput", "BashInput"]),
-    ).toEqual([
+    expect(mapToolInputNames(["WebFetchInput", "FileReadInput", "BashInput"])).toEqual([
       ["Bash", "BashInput"],
       ["Read", "FileReadInput"],
       ["WebFetch", "WebFetchInput"],
