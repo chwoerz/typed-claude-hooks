@@ -15,13 +15,15 @@ typed-claude-hooks is a TypeScript library + CLI that provides type-safe hooks f
 
 # Generated Files
 
-The only generated source files are under `src/types/generated/`. Do not edit them by hand; run `npm run extract-types` to regenerate them from `@anthropic-ai/claude-agent-sdk`.
+Generated library source files are under `src/types/generated/`. Do not edit them by hand; run `npm run extract-types` to regenerate them from `@anthropic-ai/claude-agent-sdk`.
+
+The playground declaration manifest at `site/src/playground/generated/type-libraries.json` is generated build output. Do not edit or commit it; run `npm run prepare:playground-types` from `site/` after building the root package to regenerate it.
 
 CLI builds produce `.mjs` hook bundles plus mandatory shell wrappers (`.sh` or `.ps1`) and point hook entries in settings at the wrappers. Files under `.claude/hooks/` and managed hook entries in `.claude/settings.json` are build artifacts managed by `npx typed-claude-hooks build`.
 
 # Site Development
 
-`site/` is a separate Astro project with its own `package.json`. Run `npm install` in both the repository root and `site/`, then use `npm run build` from `site/` to verify it.
+`site/` is a separate Astro project with its own `package.json`. Run `npm install` in both the repository root and `site/`, then run the root `npm run build` before site commands so the playground can prepare the library declarations. Use `npm run build` from `site/` to verify it.
 
 # Config API
 

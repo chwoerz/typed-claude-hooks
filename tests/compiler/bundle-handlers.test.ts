@@ -1,6 +1,6 @@
 import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, resolve } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import * as esbuild from "esbuild";
 import { describe, expect, it, vi } from "vitest";
 import { bundleHandlers } from "../../src/compiler/bundle-handlers.js";
@@ -179,5 +179,17 @@ describe("bundleHandlers", () => {
 
     expect(files[0].wrapper.filePath).toBe(resolve(OUTPUT_DIR, `Stop/onStop${extension}`));
     expect(files[0].wrapper.contents).toContain(runtimeCheck);
+  });
+
+  it("resolves relative hooks directories before planning artifact paths", async () => {
+    const files = await bundleHandlers({
+      configPath: FIXTURE_PATH,
+      handlers: [{ event: "Stop", name: "onStop" }],
+      hooksDir: relative(process.cwd(), OUTPUT_DIR),
+      runtime: "node",
+    });
+
+    expect(files[0].filePath).toBe(resolve(OUTPUT_DIR, "Stop/onStop.mjs"));
+    expect(files[0].wrapper.filePath).toBe(resolve(OUTPUT_DIR, "Stop/onStop.sh"));
   });
 });

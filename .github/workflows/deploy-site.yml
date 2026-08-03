@@ -5,16 +5,28 @@ on:
     branches: [main]
     paths:
       - 'site/**'
+      - 'src/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy-site.yml'
+  pull_request:
+    paths:
+      - 'site/**'
+      - 'src/**'
+      - 'tests/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - 'tsconfig.json'
+      - 'vitest.config.ts'
       - '.github/workflows/deploy-site.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
-  pages: write
-  id-token: write
 
 concurrency:
-  group: pages
+  group: pages-${{ github.event_name == 'pull_request' && github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -27,20 +39,64 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: site/package-lock.json
+          cache-dependency-path: |
+            package-lock.json
+            site/package-lock.json
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build library
+        run: npm run build
+
+      - name: Test library
+        run: npm test
+
+      - name: Check shared compiler files
+        run: npx biome check src/compiler/artifact-plan.ts src/compiler/index.ts tests/compiler/artifact-plan.test.ts scripts/test-package-exports.mjs
 
       - name: Install site dependencies
-        run: cd site && npm ci
+        working-directory: site
+        run: npm ci
+
+      - name: Test site
+        working-directory: site
+        run: npm test
 
       - name: Build site
-        run: cd site && npm run build
+        working-directory: site
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        working-directory: site
+        run: npx playwright install --with-deps chromium
+
+      - name: Test site in Chromium
+        working-directory: site
+        run: npm run test:e2e
+
+      - name: Upload Playwright diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-diagnostics
+          path: |
+            site/playwright-report
+            site/test-results
+          if-no-files-found: ignore
+          retention-days: 7
 
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
           path: site/dist
 
   deploy:
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    permissions:
+      pages: write
+      id-token: write
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

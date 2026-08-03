@@ -63,6 +63,10 @@ Nothing is added to your project root, so this works the same in a Python or Go
 repository as it does in a TypeScript one. Edit `hooks.config.ts` and run the
 command again to rebuild.
 
+Prefer to try it first? Open the [browser Playground](https://chwoerz.github.io/typed-claude-hooks/playground/). Monaco provides the package's TypeScript types and autocomplete, while compilation, settings preview, and ZIP creation happen entirely in your browser. Put the downloaded source at `.typed-claude-hooks/hooks.config.ts` and generated artifacts under `.claude/hooks/typed-claude-hooks/`. Merge the snippet's `hooks` property into `.claude/settings.json`; do not replace your settings file.
+
+The Playground does not execute hooks. It supports one `hooks.config.ts` only, direct named `export const` handlers initialized with `defineHandler(...)`, and imports from `typed-claude-hooks`, `typed-claude-hooks/types`, or `node:*`; arbitrary or extra npm packages and multi-file configs are not supported. Downloads target Node only, not Bun or Deno. Source stays in the page and is not persisted or uploaded.
+
 ## Writing Hooks
 
 Export handlers as named exports — each is automatically discovered by its event type:

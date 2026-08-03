@@ -1,0 +1,103 @@
+---
+import "../styles/playground.css";
+---
+
+<main id="main-content" class="playground" data-playground-root>
+  <header class="playground__bar">
+    <div>
+      <p class="playground__eyebrow">Browser workspace</p>
+      <h1>Hook Playground</h1>
+      <p>Author locally, compile in-browser, install deliberately.</p>
+    </div>
+    <div class="playground__actions" aria-label="Workspace actions">
+      <button class="button button--secondary" type="button" data-action="reset">Reset</button>
+      <button class="button" type="button" data-action="download" disabled>Download ZIP</button>
+    </div>
+  </header>
+
+  <div class="playground__workspace">
+    <section class="playground__editor-panel" aria-labelledby="editor-heading">
+      <div class="panel-heading">
+        <div>
+          <p class="panel-heading__label">Source</p>
+          <h2 id="editor-heading">hooks.config.ts</h2>
+        </div>
+        <span class="privacy-note">Not stored or transmitted</span>
+      </div>
+      <div class="playground__editor" data-playground="editor" aria-label="TypeScript hook editor">
+        <p role="status" data-playground="editor-loading">Loading TypeScript editor...</p>
+      </div>
+    </section>
+
+    <aside class="playground__output" aria-label="Build output">
+      <section class="output-section output-section--status">
+        <div class="status-line" aria-live="polite" aria-atomic="true">
+          <span class="status-dot" data-playground="status-dot"></span>
+          <strong data-playground="status">Loading compiler</strong>
+          <span data-playground="diagnostic-count">0 diagnostics</span>
+        </div>
+        <p class="init-error" data-playground="init-error" hidden></p>
+        <button class="text-button" type="button" data-action="retry" hidden>Retry compiler</button>
+      </section>
+
+      <section class="output-section" aria-labelledby="diagnostics-heading">
+        <div class="section-title">
+          <h2 id="diagnostics-heading">Diagnostics</h2>
+          <span data-playground="diagnostic-badge">0</span>
+        </div>
+        <ol class="diagnostic-list" data-playground="diagnostics">
+          <li class="empty-state">No diagnostics yet.</li>
+        </ol>
+      </section>
+
+      <section class="output-section" aria-labelledby="handlers-heading">
+        <h2 id="handlers-heading">Handlers</h2>
+        <ul class="handler-list" data-playground="handlers">
+          <li class="empty-state">Waiting for a valid build.</li>
+        </ul>
+      </section>
+
+      <section class="output-section" aria-labelledby="settings-heading">
+        <div class="section-title">
+          <h2 id="settings-heading">Settings snippet</h2>
+          <span>merge <code>hooks</code> only</span>
+        </div>
+        <pre class="settings-preview"><code data-playground="settings">{`{
+  "hooks": {}
+}`}</code></pre>
+      </section>
+
+      <section class="output-section" aria-labelledby="files-heading">
+        <h2 id="files-heading">Generated files</h2>
+        <ul class="file-tree" data-playground="files">
+          <li class="empty-state">Artifacts appear after a valid build.</li>
+        </ul>
+      </section>
+
+      <section class="output-section placement" aria-labelledby="placement-heading">
+        <h2 id="placement-heading">Placement guide</h2>
+        <dl>
+          <div>
+            <dt>Editable source</dt>
+            <dd><code>.typed-claude-hooks/hooks.config.ts</code></dd>
+          </div>
+          <div>
+            <dt>Generated artifacts</dt>
+            <dd><code>.claude/hooks/typed-claude-hooks/</code></dd>
+          </div>
+          <div>
+            <dt>Settings</dt>
+            <dd>Merge the snippet's <code>hooks</code> property into <code>.claude/settings.json</code>.</dd>
+          </div>
+        </dl>
+      </section>
+    </aside>
+  </div>
+</main>
+
+<script>
+  import { initializePlayground } from "../playground/app";
+
+  const root = document.querySelector<HTMLElement>("[data-playground-root]");
+  if (root) void initializePlayground(root);
+</script>

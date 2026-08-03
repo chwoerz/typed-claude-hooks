@@ -1,7 +1,4 @@
-import { relative } from "node:path";
-import type { HandlerOptions } from "../types/mapping.js";
-import { clearUndefineds } from "../utils.js";
-import type { PlannedArtifact } from "./bundle-handlers.js";
+import { buildHookEntries, type MatcherEntry, type PlannedArtifactPaths } from "./artifact-plan.js";
 
 interface ExistingHookEntry {
   command?: string;
@@ -14,58 +11,9 @@ interface ExistingMatcherEntry {
 
 export interface MergeOptions {
   existingSettings: Record<string, unknown>;
-  bundledFiles: PlannedArtifact[];
+  bundledFiles: PlannedArtifactPaths[];
   managedCommandPrefix: string;
   projectRoot: string;
-}
-
-interface HookCommandEntry extends Omit<HandlerOptions, "matcher"> {
-  type: "command";
-  command: string;
-}
-
-interface MatcherEntry {
-  matcher?: string;
-  hooks: HookCommandEntry[];
-}
-
-function createHookCommandEntry(projectRoot: string, f: PlannedArtifact): HookCommandEntry {
-  const {
-    contents: _contents,
-    event,
-    fileName,
-    filePath,
-    matcher,
-    name,
-    runtime: _runtime,
-    wrapper,
-    ...hookOptions
-  } = f;
-  const commandPath = wrapper.filePath;
-  const relativeCommandPath = `\${CLAUDE_PROJECT_DIR}/${relative(projectRoot, commandPath).replaceAll("\\", "/")}`;
-  const command = `"${relativeCommandPath}"`;
-  return clearUndefineds({
-    type: "command" as const,
-    command: f.shell === "powershell" ? `& ${command}` : command,
-    ...hookOptions,
-  });
-}
-
-function buildHookEntries(bundledFiles: PlannedArtifact[], projectRoot: string): Record<string, MatcherEntry[]> {
-  const byEvent = Map.groupBy(bundledFiles, (f) => f.event);
-
-  return Object.fromEntries(
-    [...byEvent.entries()].map(([event, files]) => {
-      const byMatcher = Map.groupBy(files, (f) => f.matcher);
-      const matchers = [...byMatcher.entries()].map(
-        ([matcher, matcherFiles]): MatcherEntry => ({
-          ...(matcher !== undefined ? { matcher } : {}),
-          hooks: matcherFiles.map((f) => createHookCommandEntry(projectRoot, f)),
-        }),
-      );
-      return [event, matchers];
-    }),
-  );
 }
 
 function isManagedHook(hook: ExistingHookEntry, managedCommandPrefix: string): boolean {

@@ -25,8 +25,13 @@ export function makeProject(prefix: string): string {
 
   const sandboxDir = resolve(tempDir, ".typed-claude-hooks");
   const modulesDir = resolve(sandboxDir, "node_modules");
-  mkdirSync(modulesDir, { recursive: true });
+  const typesDir = resolve(modulesDir, "@types");
+  mkdirSync(typesDir, { recursive: true });
   symlinkSync(PACKAGE_ROOT, resolve(modulesDir, "typed-claude-hooks"), "dir");
+  // tsconfig.json's "types": ["node"] requires @types/node to be resolvable from the
+  // sandbox's own node_modules. This mirrors what a real npm install produces without
+  // actually running one.
+  symlinkSync(resolve(PACKAGE_ROOT, "node_modules/@types/node"), resolve(typesDir, "node"), "dir");
   writeFileSync(
     resolve(sandboxDir, "package.json"),
     JSON.stringify({
@@ -34,6 +39,7 @@ export function makeProject(prefix: string): string {
       private: true,
       type: "module",
       dependencies: { "typed-claude-hooks": `file:${PACKAGE_ROOT}` },
+      devDependencies: { "@types/node": "^22" },
     }),
   );
   return tempDir;

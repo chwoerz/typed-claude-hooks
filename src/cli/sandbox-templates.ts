@@ -23,6 +23,8 @@ export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edi
 const TSCONFIG_TEMPLATE = `{
   "compilerOptions": {
     "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
@@ -42,6 +44,7 @@ function packageJsonTemplate(version: string): string {
     private: true,
     type: "module",
     dependencies: { "typed-claude-hooks": version },
+    devDependencies: { "@types/node": "^22" },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;
 }

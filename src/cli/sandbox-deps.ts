@@ -52,6 +52,17 @@ export function readDependencyState(sandboxDir: string): DependencyState {
   };
 }
 
+function readDevDependencies(manifest: Record<string, unknown> | undefined): Record<string, string> {
+  const devDependencies = manifest?.devDependencies;
+  return devDependencies && typeof devDependencies === "object" ? (devDependencies as Record<string, string>) : {};
+}
+
+export function hasUnresolvedDependencies(sandboxDir: string): boolean {
+  const manifest = readJson(resolve(sandboxDir, "package.json"));
+  const names = [...Object.keys(readDependencies(manifest)), ...Object.keys(readDevDependencies(manifest))];
+  return names.some((name) => !existsSync(resolve(sandboxDir, "node_modules", name, "package.json")));
+}
+
 export function writeDeclaredSpec(sandboxDir: string, spec: string): void {
   const manifestPath = resolve(sandboxDir, "package.json");
   const manifest = readJson(manifestPath) ?? {};

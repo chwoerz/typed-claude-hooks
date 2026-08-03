@@ -1,4 +1,8 @@
 ---
+const base = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/`;
+const docs = `${base}docs/#cli`;
+const playground = `${base}playground/`;
+
 const steps = [
   {
     command: "npx typed-claude-hooks",
@@ -34,7 +38,7 @@ const steps = [
     </div>
 
     <p class="quickstart__note"><code>hookEventName</code> is optional in authored hook output; the runtime injects the handler event when omitted.</p>
-    <p class="quickstart__done">Need runtime options and build details? <a href={`${import.meta.env.BASE_URL}/docs/#cli`}>Read the docs.</a></p>
+    <p class="quickstart__done"><a href={playground}>Try the Playground</a> with Monaco autocomplete and browser-only downloads, or <a href={docs}>read the CLI docs</a>.</p>
   </div>
 </section>
 

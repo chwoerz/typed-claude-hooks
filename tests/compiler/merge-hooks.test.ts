@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { PlannedArtifact } from "../../src/compiler/bundle-handlers.js";
+import type { PlannedArtifactPaths } from "../../src/compiler/artifact-plan.js";
 import { mergeHooksIntoSettings } from "../../src/compiler/merge-hooks.js";
 
 describe("mergeHooksIntoSettings", () => {
   const managedCommandPrefix = `\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/`;
-  const bundledFiles: PlannedArtifact[] = [
+  const bundledFiles: PlannedArtifactPaths[] = [
     {
       fileName: "blockDangerous.mjs",
       filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
@@ -225,7 +225,7 @@ describe("mergeHooksIntoSettings", () => {
       },
     };
 
-    const noWriteHandlers: PlannedArtifact[] = [
+    const noWriteHandlers: PlannedArtifactPaths[] = [
       {
         fileName: "blockDangerous.mjs",
         filePath: "/project/.claude/hooks/typed-claude-hooks/PreToolUse/blockDangerous.mjs",
@@ -257,7 +257,7 @@ describe("mergeHooksIntoSettings", () => {
   });
 
   it("includes timeout in hook entry when set", () => {
-    const filesWithTimeout: PlannedArtifact[] = [
+    const filesWithTimeout: PlannedArtifactPaths[] = [
       {
         fileName: "onStop.mjs",
         filePath: "/project/.claude/hooks/typed-claude-hooks/Stop/onStop.mjs",
