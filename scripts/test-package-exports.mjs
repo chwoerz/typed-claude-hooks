@@ -20,6 +20,9 @@ try {
   assert(packedFiles.includes("dist/compiler/index.js"));
   assert(packedFiles.includes("dist/compiler/index.d.ts"));
 
+  const packedMaps = packedFiles.filter((path) => path.endsWith(".map"));
+  assert.deepEqual(packedMaps, [], `Published tarball must not ship source maps: ${packedMaps.join(", ")}`);
+
   const packageRoot = resolve(consumerRoot, "node_modules/typed-claude-hooks");
   mkdirSync(packageRoot, { recursive: true });
   execFileSync("tar", ["-xzf", resolve(consumerRoot, packed.filename), "--strip-components=1", "-C", packageRoot], {

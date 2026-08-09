@@ -1,7 +1,10 @@
 import { extname, resolve } from "node:path";
-import { Node, Project, SyntaxKind } from "ts-morph";
+import { type AnyNode, parse } from "acorn";
+import * as esbuild from "esbuild";
+import { loaderForPath } from "./esbuild-loader.js";
 
 const PACKAGE_NAME = "typed-claude-hooks";
+const PURE_ANNOTATION = "/* @__PURE__ */ ";
 
 function withoutExtension(filePath: string): string {
   return filePath.slice(0, -extname(filePath).length || undefined);
@@ -15,31 +18,55 @@ function isAuthoringModule(moduleName: string, configPath: string): boolean {
   return ["src/index", "src/authoring/define-handler"].some((suffix) => importedPath.endsWith(`/${suffix}`));
 }
 
-export function annotatePureHandlers(source: string, configPath: string): string {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile(configPath, source);
-  const importSymbols = sourceFile
-    .getImportDeclarations()
-    .filter((declaration) => isAuthoringModule(declaration.getModuleSpecifierValue(), configPath))
-    .flatMap((declaration) => declaration.getNamedImports())
-    .filter((specifier) => specifier.getName() === "defineHandler")
-    .map((specifier) => specifier.getAliasNode() ?? specifier.getNameNode())
-    .map((identifier) => identifier.getSymbol())
-    .filter((symbol) => symbol !== undefined);
+function isNode(value: unknown): value is AnyNode {
+  return value !== null && typeof value === "object" && typeof (value as { type?: unknown }).type === "string";
+}
 
-  const positions = sourceFile
-    .getDescendantsOfKind(SyntaxKind.CallExpression)
-    .map((call) => call.getExpression())
-    .filter(Node.isIdentifier)
-    .filter((identifier) => {
-      const symbol = identifier.getSymbol();
-      return symbol !== undefined && importSymbols.includes(symbol);
-    })
-    .map((identifier) => identifier.getStart())
-    .sort((left, right) => right - left);
-
-  positions.forEach((position) => {
-    sourceFile.insertText(position, "/* @__PURE__ */ ");
+function childNodes(node: AnyNode): AnyNode[] {
+  return Object.values(node).flatMap((value) => {
+    if (Array.isArray(value)) return value.filter(isNode);
+    return isNode(value) ? [value] : [];
   });
-  return sourceFile.getFullText();
+}
+
+function isHandlerCall(node: AnyNode, localNames: Set<string>): boolean {
+  return node.type === "CallExpression" && node.callee.type === "Identifier" && localNames.has(node.callee.name);
+}
+
+function collectCallStarts(node: AnyNode, localNames: Set<string>): number[] {
+  const own = isHandlerCall(node, localNames) ? [node.start] : [];
+  return [...own, ...childNodes(node).flatMap((child) => collectCallStarts(child, localNames))];
+}
+
+function insertPureAnnotations(code: string, callStarts: number[]): string {
+  const sorted = [...callStarts].sort((left, right) => left - right);
+  const segments = sorted.map((start, index) => code.slice(index === 0 ? 0 : sorted[index - 1], start));
+  return [...segments, code.slice(sorted.at(-1) ?? 0)].join(PURE_ANNOTATION);
+}
+
+/**
+ * Marks `defineHandler(...)` calls as side-effect free so esbuild can tree-shake
+ * the handlers a given bundle does not import.
+ *
+ * Types are stripped with esbuild first, so the returned code is plain JavaScript
+ * and must be handed to esbuild with the `js` loader.
+ */
+export async function annotatePureHandlers(source: string, configPath: string): Promise<string> {
+  const { code } = await esbuild.transform(source, {
+    loader: loaderForPath(configPath),
+    jsx: "automatic",
+  });
+  const program = parse(code, { ecmaVersion: "latest", sourceType: "module" });
+
+  const localNames = new Set(
+    program.body
+      .filter((node) => node.type === "ImportDeclaration")
+      .filter((node) => isAuthoringModule(String(node.source.value), configPath))
+      .flatMap((node) => node.specifiers)
+      .filter((specifier) => specifier.type === "ImportSpecifier")
+      .filter((specifier) => specifier.imported.type === "Identifier" && specifier.imported.name === "defineHandler")
+      .map((specifier) => specifier.local.name),
+  );
+
+  return insertPureAnnotations(code, collectCallStarts(program, localNames));
 }

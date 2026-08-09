@@ -5,7 +5,6 @@ import * as esbuild from "esbuild";
 import type { Runtime } from "../types/mapping.js";
 import { annotatePureHandlers } from "./annotate-pure-handlers.js";
 import { type PlannedArtifact, planArtifactPaths } from "./artifact-plan.js";
-import { loaderForPath } from "./esbuild-loader.js";
 import type { HandlerEntry } from "./extract-handlers.js";
 import { generateRuntime } from "./runtime-template.js";
 
@@ -18,8 +17,15 @@ export interface BundleOptions {
   runtime: Runtime;
 }
 
+async function annotateFile(filePath: string): Promise<esbuild.OnLoadResult> {
+  return {
+    contents: await annotatePureHandlers(readFileSync(filePath, "utf8"), filePath),
+    loader: "js",
+  };
+}
+
 function createPlugin(): esbuild.Plugin {
-  const transformed = new Map<string, esbuild.OnLoadResult>();
+  const transformed = new Map<string, Promise<esbuild.OnLoadResult>>();
   return {
     name: "pure-define-handler",
     setup(build) {
@@ -29,10 +35,7 @@ function createPlugin(): esbuild.Plugin {
         const cached = transformed.get(filePath);
         if (cached) return cached;
 
-        const result = {
-          contents: annotatePureHandlers(readFileSync(filePath, "utf8"), filePath),
-          loader: loaderForPath(filePath),
-        };
+        const result = annotateFile(filePath);
         transformed.set(filePath, result);
         return result;
       });
