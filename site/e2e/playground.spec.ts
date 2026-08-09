@@ -4,7 +4,7 @@ import { strFromU8, unzipSync } from "fflate";
 const browserErrors = new WeakMap<Page, string[]>();
 const pasteShortcut = process.platform === "darwin" ? "Meta+V" : "Control+V";
 
-const starterSource = `import { defineHandler } from "typed-claude-hooks"
+const starterSource = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const blockRm = defineHandler(
   "PreToolUse",
@@ -21,7 +21,7 @@ export const blockRm = defineHandler(
 )
 `;
 
-const editedSource = `import { defineHandler } from "typed-claude-hooks"
+const editedSource = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const guardWrite = defineHandler(
   "PreToolUse",
@@ -316,7 +316,7 @@ async function triggerCompletion(page: Page): Promise<void> {
 
 function completionSource(expression: string): string {
   return `import { readFile } from "node:fs"
-import { defineHandler } from "typed-claude-hooks"
+import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const inspectWrite = defineHandler("PreToolUse", { matcher: "Write" }, async (input) => {
   ${expression}`;

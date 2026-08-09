@@ -16,7 +16,7 @@
     "fflate": "^0.8.3",
     "monaco-editor": "^0.56.0",
     "shiki": "^4.3.0",
-    "typed-claude-hooks": "file:..",
+    "@typed-rocks/typed-claude-hooks": "file:..",
     "typescript": "^5.9.3"
   },
   "devDependencies": {

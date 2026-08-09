@@ -5,7 +5,7 @@ export const SANDBOX_DIR = ".typed-claude-hooks";
 export const CONFIG_FILE_NAME = "hooks.config.ts";
 export const SANDBOX_FILES = ["package.json", CONFIG_FILE_NAME, "tsconfig.json", ".gitignore"] as const;
 
-const CONFIG_TEMPLATE = `import { defineHandler } from "typed-claude-hooks"
+const CONFIG_TEMPLATE = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
   if (input.tool_input.file_path.endsWith(".env")) {
@@ -43,7 +43,7 @@ function packageJsonTemplate(version: string): string {
     name: "typed-claude-hooks-config",
     private: true,
     type: "module",
-    dependencies: { "typed-claude-hooks": version },
+    dependencies: { "@typed-rocks/typed-claude-hooks": version },
     devDependencies: { "@types/node": "^22" },
   };
   return `${JSON.stringify(manifest, null, 2)}\n`;

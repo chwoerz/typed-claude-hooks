@@ -1,8 +1,19 @@
 {
-  "name": "typed-claude-hooks",
+  "name": "@typed-rocks/typed-claude-hooks",
   "version": "0.1.1",
   "description": "Type-safe Claude Code hooks in TypeScript",
   "type": "module",
+  "publishConfig": {
+    "access": "public"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/chwoerz/typed-claude-hooks.git"
+  },
+  "homepage": "https://github.com/chwoerz/typed-claude-hooks#readme",
+  "bugs": {
+    "url": "https://github.com/chwoerz/typed-claude-hooks/issues"
+  },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "bin": {

@@ -3,7 +3,7 @@ import { type AnyNode, parse } from "acorn";
 import * as esbuild from "esbuild";
 import { loaderForPath } from "./esbuild-loader.js";
 
-const PACKAGE_NAME = "typed-claude-hooks";
+const PACKAGE_NAME = "@typed-rocks/typed-claude-hooks";
 const PURE_ANNOTATION = "/* @__PURE__ */ ";
 
 function withoutExtension(filePath: string): string {

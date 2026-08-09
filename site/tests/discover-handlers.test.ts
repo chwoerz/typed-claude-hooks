@@ -21,7 +21,7 @@ describe("discoverHandlers", () => {
     "rejects unsupported event %s before artifact planning",
     (event) => {
       const result = discoverHandlers(`
-        import { defineHandler } from "typed-claude-hooks"
+        import { defineHandler } from "@typed-rocks/typed-claude-hooks"
         export const invalid = defineHandler(${JSON.stringify(event)}, async () => ({}))
       `);
 
@@ -34,8 +34,8 @@ describe("discoverHandlers", () => {
 
   it("discovers direct named handlers through named and aliased imports", () => {
     const result = discoverHandlers(`
-      import { defineHandler, defineHandler as hook } from "typed-claude-hooks"
-      import type { HookEvent } from "typed-claude-hooks/types"
+      import { defineHandler, defineHandler as hook } from "@typed-rocks/typed-claude-hooks"
+      import type { HookEvent } from "@typed-rocks/typed-claude-hooks/types"
       import { readFile } from "node:fs/promises"
 
       export const before = defineHandler("PreToolUse", {
@@ -73,7 +73,7 @@ describe("discoverHandlers", () => {
     const result = discoverHandlers(`
       import path from "path"
       import value from "other-package"
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
 
@@ -97,7 +97,7 @@ describe("discoverHandlers", () => {
     "rejects %s module loading even for an approved module",
     (_name, moduleLoad) => {
       const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       ${moduleLoad}
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
@@ -119,7 +119,7 @@ describe("discoverHandlers", () => {
     "rejects %s node:module imports that expose createRequire",
     (_name, moduleImport) => {
       const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       ${moduleImport}
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
@@ -139,7 +139,7 @@ describe("discoverHandlers", () => {
     ["ordinary named import", 'import { builtinModules } from "node:module"'],
   ])("rejects the %s node:module runtime bypass", (_name, moduleImport) => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       ${moduleImport}
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
@@ -157,7 +157,7 @@ describe("discoverHandlers", () => {
     const result = discoverHandlers(`
       import type { Module } from "node:module"
       import { type createRequire } from "node:module"
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
 
@@ -172,7 +172,7 @@ describe("discoverHandlers", () => {
     ["require", 'require("node:fs")'],
   ])("detects %s inside a handler body", (_name, moduleLoad) => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", async () => {
         ${moduleLoad}
         return {}
@@ -187,13 +187,13 @@ describe("discoverHandlers", () => {
 
   it("does not treat type-only defineHandler imports as callable bindings", () => {
     const result = discoverHandlers(`
-      import type { defineHandler } from "typed-claude-hooks"
+      import type { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
 
     expect(result.handlers).toEqual([]);
     expect(messagesFor(result)).toContainEqual(
-      expect.stringContaining('imported from "typed-claude-hooks"'),
+      expect.stringContaining('imported from "@typed-rocks/typed-claude-hooks"'),
     );
   });
 
@@ -201,7 +201,7 @@ describe("discoverHandlers", () => {
     "rejects an exported %s handler declaration",
     (declarationKind) => {
       const result = discoverHandlers(`
-        import { defineHandler } from "typed-claude-hooks"
+        import { defineHandler } from "@typed-rocks/typed-claude-hooks"
         export ${declarationKind} stopped = defineHandler("Stop", async () => ({}))
       `);
 
@@ -219,7 +219,7 @@ describe("discoverHandlers", () => {
     ["non-handler variable", "export const value = 1"],
   ])("rejects an exported runtime %s", (_name, runtimeExport) => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       ${runtimeExport}
       export const stopped = defineHandler("Stop", async () => ({}))
     `);
@@ -235,7 +235,7 @@ describe("discoverHandlers", () => {
 
   it("allows exported type declarations because they emit no runtime code", () => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export interface HandlerContext { enabled: boolean }
       export type HandlerName = string
       export const stopped = defineHandler("Stop", async () => ({}))
@@ -252,7 +252,7 @@ describe("discoverHandlers", () => {
     ["type-only specifier", "export { type HandlerContext }"],
   ])("allows a %s because it emits no runtime code", (_name, typeExport) => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       interface HandlerContext { enabled: boolean }
       ${typeExport}
       export const stopped = defineHandler("Stop", async () => ({}))
@@ -267,10 +267,10 @@ describe("discoverHandlers", () => {
   it.each([
     ["runtime clause", "export { HandlerContext }"],
     ["mixed clause", "export { type HandlerContext, runtimeValue }"],
-    ["export star", 'export * from "typed-claude-hooks/types"'],
+    ["export star", 'export * from "@typed-rocks/typed-claude-hooks/types"'],
   ])("rejects a %s export declaration", (_name, declaration) => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       interface HandlerContext { enabled: boolean }
       const runtimeValue = 1
       ${declaration}
@@ -300,23 +300,23 @@ describe("discoverHandlers", () => {
     ["re-exports", `export { handler } from "./handler"`, "Runtime re-exports"],
     [
       "indirect handlers",
-      `import { defineHandler } from "typed-claude-hooks"\nconst handler = defineHandler("Stop", async () => ({}))\nexport { handler }`,
+      `import { defineHandler } from "@typed-rocks/typed-claude-hooks"\nconst handler = defineHandler("Stop", async () => ({}))\nexport { handler }`,
       "Runtime re-exports",
     ],
     [
       "dynamic construction",
-      `import { defineHandler } from "typed-claude-hooks"\nconst make = defineHandler\nexport const handler = make("Stop", async () => ({}))`,
+      `import { defineHandler } from "@typed-rocks/typed-claude-hooks"\nconst make = defineHandler\nexport const handler = make("Stop", async () => ({}))`,
       "direct call",
     ],
     [
       "namespace calls",
-      `import * as hooks from "typed-claude-hooks"\nexport const handler = hooks.defineHandler("Stop", async () => ({}))`,
+      `import * as hooks from "@typed-rocks/typed-claude-hooks"\nexport const handler = hooks.defineHandler("Stop", async () => ({}))`,
       "Namespace calls",
     ],
     [
       "local lookalikes",
       `const defineHandler = () => ({})\nexport const handler = defineHandler("Stop", async () => ({}))`,
-      'imported from "typed-claude-hooks"',
+      'imported from "@typed-rocks/typed-claude-hooks"',
     ],
   ])("rejects %s", (_name, source, expected) => {
     expect(messages(source)).toEqual(
@@ -326,12 +326,12 @@ describe("discoverHandlers", () => {
 
   it("rejects duplicate exported names and artifact-unsafe names", () => {
     const duplicate = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const handler = defineHandler("Stop", async () => ({}))
       export const handler = defineHandler("Stop", async () => ({}))
     `);
     const unsafe = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const $handler = defineHandler("Stop", async () => ({}))
     `);
 
@@ -382,7 +382,7 @@ describe("discoverHandlers", () => {
     ],
   ])("rejects a non-static or unsupported %s", (_name, declaration) => {
     const result = discoverHandlers(
-      `import { defineHandler } from "typed-claude-hooks"\n${declaration}`,
+      `import { defineHandler } from "@typed-rocks/typed-claude-hooks"\n${declaration}`,
     );
 
     expect(result.handlers).toEqual([]);
@@ -396,7 +396,7 @@ describe("discoverHandlers", () => {
 
   it("accepts the largest finite timeout literal", () => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", { timeout: 1.7976931348623157e308 }, async () => ({}))
     `);
 
@@ -408,7 +408,7 @@ describe("discoverHandlers", () => {
 
   it("rejects a numeric timeout literal that evaluates to infinity", () => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const stopped = defineHandler("Stop", { timeout: 1e999 }, async () => ({}))
     `);
 
@@ -423,7 +423,7 @@ describe("discoverHandlers", () => {
 
   it("reports malformed TypeScript without throwing", () => {
     const result = discoverHandlers(`
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const broken = defineHandler("Stop", async () => {
     `);
 
@@ -440,7 +440,7 @@ describe("discoverHandlers", () => {
 
   it("reports a clear diagnostic when no handlers are exported", () => {
     const result = discoverHandlers(
-      `import type { HookEvent } from "typed-claude-hooks/types"`,
+      `import type { HookEvent } from "@typed-rocks/typed-claude-hooks/types"`,
     );
 
     expect(result.handlers).toEqual([]);

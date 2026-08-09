@@ -32,10 +32,10 @@ describe("playground type libraries", () => {
     const filePaths = typeLibraries.map(({ filePath }) => filePath);
 
     expect(filePaths).toContain(
-      "file:///node_modules/typed-claude-hooks/index.d.ts",
+      "file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts",
     );
     expect(filePaths).toContain(
-      "file:///node_modules/typed-claude-hooks/types/index.d.ts",
+      "file:///node_modules/@typed-rocks/typed-claude-hooks/types/index.d.ts",
     );
     expect(filePaths).toContain("file:///node_modules/@types/node/index.d.ts");
     expect(
@@ -47,7 +47,7 @@ describe("playground type libraries", () => {
 
   it("exports a map keyed by Monaco virtual file path", () => {
     expect(
-      typeLibraryMap["file:///node_modules/typed-claude-hooks/index.d.ts"],
+      typeLibraryMap["file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts"],
     ).toContain("defineHandler");
     expect(Object.keys(typeLibraryMap)).toHaveLength(typeLibraries.length);
   });
@@ -55,7 +55,7 @@ describe("playground type libraries", () => {
   it("resolves public bare imports from the complete virtual filesystem", () => {
     expect(
       typeVirtualFileMap[
-        "file:///node_modules/typed-claude-hooks/package.json"
+        "file:///node_modules/@typed-rocks/typed-claude-hooks/package.json"
       ],
     ).toBeDefined();
     expect(
@@ -72,11 +72,11 @@ describe("playground type libraries", () => {
         compilerOptions,
         resolutionHost,
       ).resolvedModule?.resolvedFileName;
-    expect(resolve("typed-claude-hooks")).toBe(
-      "file:///node_modules/typed-claude-hooks/index.d.ts",
+    expect(resolve("@typed-rocks/typed-claude-hooks")).toBe(
+      "file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts",
     );
-    expect(resolve("typed-claude-hooks/types")).toBe(
-      "file:///node_modules/typed-claude-hooks/types/index.d.ts",
+    expect(resolve("@typed-rocks/typed-claude-hooks/types")).toBe(
+      "file:///node_modules/@typed-rocks/typed-claude-hooks/types/index.d.ts",
     );
     expect(resolve("undici-types")).toBe(
       "file:///node_modules/undici-types/index.d.ts",

@@ -2,7 +2,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 
-const PACKAGE_NAME = "typed-claude-hooks";
+const PACKAGE_NAME = "@typed-rocks/typed-claude-hooks";
 const LOCAL_SPEC = /^(file|link):/;
 
 export interface DependencyState {

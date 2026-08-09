@@ -20,7 +20,7 @@ if (input.tool_input.comand.includes('rm -rf')) {
 ## The Fix
 
 ```ts
-import { defineHandler } from "typed-claude-hooks"
+import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const blockRm = defineHandler("PreToolUse", { matcher: "Bash" }, async (input) => {
   // input.tool_input is fully typed — autocomplete for command, timeout, description
@@ -65,14 +65,14 @@ command again to rebuild.
 
 Prefer to try it first? Open the [browser Playground](https://chwoerz.github.io/typed-claude-hooks/playground/). Monaco provides the package's TypeScript types and autocomplete, while compilation, settings preview, and ZIP creation happen entirely in your browser. Put the downloaded source at `.typed-claude-hooks/hooks.config.ts` and generated artifacts under `.claude/hooks/typed-claude-hooks/`. Merge the snippet's `hooks` property into `.claude/settings.json`; do not replace your settings file.
 
-The Playground does not execute hooks. It supports one `hooks.config.ts` only, direct named `export const` handlers initialized with `defineHandler(...)`, and imports from `typed-claude-hooks`, `typed-claude-hooks/types`, or `node:*`; arbitrary or extra npm packages and multi-file configs are not supported. Downloads target Node only, not Bun or Deno. Source stays in the page and is not persisted or uploaded.
+The Playground does not execute hooks. It supports one `hooks.config.ts` only, direct named `export const` handlers initialized with `defineHandler(...)`, and imports from `@typed-rocks/typed-claude-hooks`, `@typed-rocks/typed-claude-hooks/types`, or `node:*`; arbitrary or extra npm packages and multi-file configs are not supported. Downloads target Node only, not Bun or Deno. Source stays in the page and is not persisted or uploaded.
 
 ## Writing Hooks
 
 Export handlers as named exports — each is automatically discovered by its event type:
 
 ```ts
-import { defineHandler } from "typed-claude-hooks"
+import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 // Matcher narrows tool_input to FileWriteInput | FileEditInput
 export const protectEnv = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
@@ -135,7 +135,7 @@ Built-in tool inputs are typed for file and search tools, shell and web tools, a
 Use `testHandler` to unit test your handlers without stdin/stdout or process spawning:
 
 ```ts
-import { testHandler } from "typed-claude-hooks/testing"
+import { testHandler } from "@typed-rocks/typed-claude-hooks/testing"
 import { protectEnv } from "./hooks.config"
 
 const result = await testHandler(protectEnv, {
@@ -164,7 +164,7 @@ Scaffolds the sandbox if needed, then compiles hooks and merges them into the ta
 
 Passing an explicit `[config]` builds that file and skips the sandbox entirely — nothing is scaffolded and no dependency is installed.
 
-Each run checks that the `typed-claude-hooks` version installed in the sandbox matches the CLI's own. On a mismatch it repins that one dependency and reinstalls; any dependencies you added for your own hooks are preserved. A `file:` or `link:` specifier is never rewritten.
+Each run checks that the `@typed-rocks/typed-claude-hooks` version installed in the sandbox matches the CLI's own. On a mismatch it repins that one dependency and reinstalls; any dependencies you added for your own hooks are preserved. A `file:` or `link:` specifier is never rewritten.
 
 `--runtime` applies only to that build. It is embedded in generated wrappers and is not persisted to the config or `settings.json`; omit it on a later build to return to Node.
 
@@ -226,7 +226,7 @@ import type {
   PreToolUseHookInput,
   StopHookInput,
   SyncHookJSONOutput,
-} from "typed-claude-hooks/types"
+} from "@typed-rocks/typed-claude-hooks/types"
 ```
 
 Types are auto-extracted from the `@anthropic-ai/claude-agent-sdk` package and bundled with typed-claude-hooks — no extra dependencies needed.

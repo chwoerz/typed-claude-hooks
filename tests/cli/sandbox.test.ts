@@ -13,9 +13,9 @@ function makeSandboxPath(): string {
 }
 
 function writeInstalled(sandboxDir: string, version: string): void {
-  const dir = resolve(sandboxDir, "node_modules/typed-claude-hooks");
+  const dir = resolve(sandboxDir, "node_modules/@typed-rocks/typed-claude-hooks");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "typed-claude-hooks", version }));
+  writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "@typed-rocks/typed-claude-hooks", version }));
 }
 
 function writeInstalledPackage(sandboxDir: string, name: string): void {
@@ -67,7 +67,7 @@ describe("ensureSandbox", () => {
       resolve(sandboxDir, "package.json"),
       JSON.stringify({
         dependencies: {
-          "typed-claude-hooks": "1.2.3",
+          "@typed-rocks/typed-claude-hooks": "1.2.3",
           ...(dependencySection === "dependencies" ? { zod: "^3.0.0" } : {}),
         },
         ...(dependencySection === "devDependencies" ? { devDependencies: { zod: "^3.0.0" } } : {}),
@@ -79,7 +79,7 @@ describe("ensureSandbox", () => {
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+    expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe("1.2.3");
     expect(install).toHaveBeenCalledWith(sandboxDir);
     expect(install).toHaveBeenCalledTimes(1);
   });
@@ -89,7 +89,7 @@ describe("ensureSandbox", () => {
     ensureSandbox({ sandboxDir, version: "1.0.0", install: vi.fn() });
     writeFileSync(
       resolve(sandboxDir, "package.json"),
-      JSON.stringify({ dependencies: { "typed-claude-hooks": spec, zod: "^3.0.0" } }),
+      JSON.stringify({ dependencies: { "@typed-rocks/typed-claude-hooks": spec, zod: "^3.0.0" } }),
     );
     writeInstalled(sandboxDir, "9.9.9");
     const install = vi.fn();
@@ -97,7 +97,7 @@ describe("ensureSandbox", () => {
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies["typed-claude-hooks"]).toBe(spec);
+    expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe(spec);
     expect(install).toHaveBeenCalledTimes(1);
   });
 
@@ -107,13 +107,13 @@ describe("ensureSandbox", () => {
     writeInstalled(sandboxDir, "1.0.0");
     const install = vi.fn((dir: string) => {
       const manifest = JSON.parse(readFileSync(resolve(dir, "package.json"), "utf8"));
-      expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+      expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe("1.2.3");
     });
 
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+    expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe("1.2.3");
     expect(install).toHaveBeenCalledTimes(1);
   });
 
@@ -131,7 +131,7 @@ describe("ensureSandbox", () => {
     ensureSandbox({ sandboxDir, version: "1.0.0", install: vi.fn() });
     writeFileSync(
       resolve(sandboxDir, "package.json"),
-      JSON.stringify({ dependencies: { "typed-claude-hooks": "file:.." } }),
+      JSON.stringify({ dependencies: { "@typed-rocks/typed-claude-hooks": "file:.." } }),
     );
     writeInstalled(sandboxDir, "9.9.9");
     const install = vi.fn();
@@ -139,7 +139,7 @@ describe("ensureSandbox", () => {
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies["typed-claude-hooks"]).toBe("file:..");
+    expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe("file:..");
     expect(install).not.toHaveBeenCalled();
   });
 });

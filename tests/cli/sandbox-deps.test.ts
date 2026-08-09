@@ -20,9 +20,9 @@ function makeSandbox(): string {
 }
 
 function writeInstalled(sandboxDir: string, version: string): void {
-  const dir = resolve(sandboxDir, "node_modules/typed-claude-hooks");
+  const dir = resolve(sandboxDir, "node_modules/@typed-rocks/typed-claude-hooks");
   mkdirSync(dir, { recursive: true });
-  writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "typed-claude-hooks", version }));
+  writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "@typed-rocks/typed-claude-hooks", version }));
 }
 
 afterEach(() => {
@@ -54,7 +54,7 @@ describe("readDependencyState", () => {
     const sandboxDir = makeSandbox();
     writeFileSync(
       resolve(sandboxDir, "package.json"),
-      JSON.stringify({ dependencies: { "typed-claude-hooks": "1.2.3", zod: "^3.24.0" } }),
+      JSON.stringify({ dependencies: { "@typed-rocks/typed-claude-hooks": "1.2.3", zod: "^3.24.0" } }),
     );
     writeInstalled(sandboxDir, "1.0.0");
 
@@ -83,14 +83,14 @@ describe("writeDeclaredSpec", () => {
         name: "typed-claude-hooks-config",
         private: true,
         type: "module",
-        dependencies: { "typed-claude-hooks": "1.0.0", zod: "^3.24.0" },
+        dependencies: { "@typed-rocks/typed-claude-hooks": "1.0.0", zod: "^3.24.0" },
       }),
     );
 
     writeDeclaredSpec(sandboxDir, "1.2.3");
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies).toEqual({ "typed-claude-hooks": "1.2.3", zod: "^3.24.0" });
+    expect(manifest.dependencies).toEqual({ "@typed-rocks/typed-claude-hooks": "1.2.3", zod: "^3.24.0" });
     expect(manifest.name).toBe("typed-claude-hooks-config");
     expect(manifest.private).toBe(true);
     expect(manifest.type).toBe("module");

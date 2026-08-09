@@ -187,11 +187,11 @@ const prepareManifest = async () => {
     [
       {
         physicalPath: join(repositoryRoot, "dist/index.d.ts"),
-        virtualPath: "file:///node_modules/typed-claude-hooks/index.d.ts",
+        virtualPath: "file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts",
       },
       {
         physicalPath: join(repositoryRoot, "dist/types/index.d.ts"),
-        virtualPath: "file:///node_modules/typed-claude-hooks/types/index.d.ts",
+        virtualPath: "file:///node_modules/@typed-rocks/typed-claude-hooks/types/index.d.ts",
       },
       nodeTypes,
     ],
@@ -199,7 +199,7 @@ const prepareManifest = async () => {
   );
   const rootPackageMetadata = libraries.find(
     ({ filePath }) =>
-      filePath === "file:///node_modules/typed-claude-hooks/package.json",
+      filePath === "file:///node_modules/@typed-rocks/typed-claude-hooks/package.json",
   );
   if (rootPackageMetadata) {
     rootPackageMetadata.content = rootPackageMetadata.content.replaceAll(

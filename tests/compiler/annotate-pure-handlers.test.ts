@@ -6,7 +6,7 @@ const CONFIG_PATH = resolve(import.meta.dirname, "../../.typed-claude-hooks/hook
 
 describe("annotatePureHandlers", () => {
   it("annotates package imports and aliases without touching strings or templates", async () => {
-    const source = `import { defineHandler as handler } from "typed-claude-hooks";
+    const source = `import { defineHandler as handler } from "@typed-rocks/typed-claude-hooks";
 const string = "handler(";
 const template = \`handler(\`;
 // handler(
@@ -44,7 +44,7 @@ const member = api.defineHandler();
   });
 
   it("annotates every handler in a config with several exports", async () => {
-    const source = `import { defineHandler } from "typed-claude-hooks";
+    const source = `import { defineHandler } from "@typed-rocks/typed-claude-hooks";
 export const first = defineHandler("Stop", async () => ({}));
 export const second = defineHandler("Notification", async () => ({}));
 export const third = defineHandler("PreToolUse", { matcher: "Bash" }, async () => ({}));
@@ -54,7 +54,7 @@ export const third = defineHandler("PreToolUse", { matcher: "Bash" }, async () =
   });
 
   it("strips TypeScript syntax so the result can be loaded as JavaScript", async () => {
-    const source = `import { defineHandler } from "typed-claude-hooks";
+    const source = `import { defineHandler } from "@typed-rocks/typed-claude-hooks";
 interface Context { note: string }
 type Alias = Context | null;
 export const hook = defineHandler("Stop", async (): Promise<Record<string, never>> => {

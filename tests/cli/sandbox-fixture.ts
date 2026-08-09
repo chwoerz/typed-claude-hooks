@@ -15,8 +15,8 @@ const NPM = process.platform === "win32" ? "npm.cmd" : "npm";
 const tempDirs: string[] = [];
 
 /**
- * A temp project whose sandbox already has the repo linked in as its typed-claude-hooks
- * dependency, declared with a file: specifier. planDependencySync therefore returns "skip",
+ * A temp project whose sandbox already has the repo linked in as its
+ * @typed-rocks/typed-claude-hooks dependency, declared with a file: specifier. planDependencySync therefore returns "skip",
  * so these tests never shell out to a real npm install.
  */
 export function makeProject(prefix: string): string {
@@ -26,8 +26,10 @@ export function makeProject(prefix: string): string {
   const sandboxDir = resolve(tempDir, ".typed-claude-hooks");
   const modulesDir = resolve(sandboxDir, "node_modules");
   const typesDir = resolve(modulesDir, "@types");
+  const scopeDir = resolve(modulesDir, "@typed-rocks");
   mkdirSync(typesDir, { recursive: true });
-  symlinkSync(PACKAGE_ROOT, resolve(modulesDir, "typed-claude-hooks"), "dir");
+  mkdirSync(scopeDir, { recursive: true });
+  symlinkSync(PACKAGE_ROOT, resolve(scopeDir, "typed-claude-hooks"), "dir");
   // tsconfig.json's "types": ["node"] requires @types/node to be resolvable from the
   // sandbox's own node_modules. This mirrors what a real npm install produces without
   // actually running one.
@@ -38,7 +40,7 @@ export function makeProject(prefix: string): string {
       name: "typed-claude-hooks-config",
       private: true,
       type: "module",
-      dependencies: { "typed-claude-hooks": `file:${PACKAGE_ROOT}` },
+      dependencies: { "@typed-rocks/typed-claude-hooks": `file:${PACKAGE_ROOT}` },
       devDependencies: { "@types/node": "^22" },
     }),
   );
@@ -57,7 +59,7 @@ export function runCli(cwd: string, args: string[] = []): string {
 }
 
 /**
- * The sandbox resolves typed-claude-hooks through the root package main/types fields, which
+ * The sandbox resolves @typed-rocks/typed-claude-hooks through the root package main/types fields, which
  * point into dist/. Build once if it is missing so a clean clone can run these tests.
  */
 export function ensureBuilt(): void {

@@ -19,7 +19,7 @@ if echo "$COMMAND" | grep -q 'rm -rf'; then
   exit 2
 fi`;
 
-const tsCode = `import { defineHandler } from "typed-claude-hooks"
+const tsCode = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const blockRm = defineHandler(
   "PreToolUse",

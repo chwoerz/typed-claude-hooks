@@ -17,7 +17,7 @@ export interface EnsureSandboxOptions {
 }
 
 function installMessage(plan: DependencyPlan, missing: string[]): string {
-  if (plan.action === "install") return `Installing typed-claude-hooks@${plan.spec}...`;
+  if (plan.action === "install") return `Installing @typed-rocks/typed-claude-hooks@${plan.spec}...`;
   return `Installing missing sandbox dependencies: ${missing.join(", ")}...`;
 }
 

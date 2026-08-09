@@ -1,4 +1,4 @@
-export const starterSource = `import { defineHandler } from "typed-claude-hooks"
+export const starterSource = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const blockRm = defineHandler(
   "PreToolUse",

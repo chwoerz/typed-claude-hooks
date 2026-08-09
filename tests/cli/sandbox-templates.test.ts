@@ -38,7 +38,7 @@ describe("scaffoldSandbox", () => {
     expect(created).toEqual(["package.json", "hooks.config.ts", "tsconfig.json", ".gitignore"]);
 
     const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
-    expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+    expect(manifest.dependencies["@typed-rocks/typed-claude-hooks"]).toBe("1.2.3");
     expect(manifest.private).toBe(true);
     expect(manifest.type).toBe("module");
 

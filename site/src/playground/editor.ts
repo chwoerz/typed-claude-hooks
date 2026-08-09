@@ -404,9 +404,9 @@ function positionFromOffset(source: string, offset: number) {
 
 function createModulePaths(): Record<string, string[]> {
   return {
-    "typed-claude-hooks": ["node_modules/typed-claude-hooks/index.d.ts"],
-    "typed-claude-hooks/types": [
-      "node_modules/typed-claude-hooks/types/index.d.ts",
+    "@typed-rocks/typed-claude-hooks": ["node_modules/@typed-rocks/typed-claude-hooks/index.d.ts"],
+    "@typed-rocks/typed-claude-hooks/types": [
+      "node_modules/@typed-rocks/typed-claude-hooks/types/index.d.ts",
     ],
     "undici-types": ["node_modules/undici-types/index.d.ts"],
     "undici-types/*": ["node_modules/undici-types/*"],

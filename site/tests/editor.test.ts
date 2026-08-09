@@ -37,13 +37,13 @@ describe("playground editor", () => {
     const environment = createTypeScriptEnvironment(typeLibraries);
 
     expect(environment.extraLibs).toContainEqual({
-      filePath: "file:///node_modules/typed-claude-hooks/index.d.ts",
+      filePath: "file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts",
       content: expect.stringContaining("defineHandler"),
     });
     expect(environment.compilerOptions.paths).toMatchObject({
-      "typed-claude-hooks": ["node_modules/typed-claude-hooks/index.d.ts"],
-      "typed-claude-hooks/types": [
-        "node_modules/typed-claude-hooks/types/index.d.ts",
+      "@typed-rocks/typed-claude-hooks": ["node_modules/@typed-rocks/typed-claude-hooks/index.d.ts"],
+      "@typed-rocks/typed-claude-hooks/types": [
+        "node_modules/@typed-rocks/typed-claude-hooks/types/index.d.ts",
       ],
       "undici-types": ["node_modules/undici-types/index.d.ts"],
       "undici-types/*": ["node_modules/undici-types/*"],
@@ -55,8 +55,8 @@ describe("playground editor", () => {
     () => {
       const environment = createTypeScriptEnvironment(typeLibraries);
       const source = `
-      import { defineHandler } from "typed-claude-hooks"
-      import type { Runtime } from "typed-claude-hooks/types"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
+      import type { Runtime } from "@typed-rocks/typed-claude-hooks/types"
       import { basename } from "node:path"
 
       const runtime: Runtime = "node"
@@ -81,7 +81,7 @@ describe("playground editor", () => {
   it("completes matcher-narrowed tool input and Node APIs", () => {
     const environment = createTypeScriptEnvironment(typeLibraries);
     const matcherSource = `
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       export const blockRm = defineHandler("PreToolUse", { matcher: "Bash" }, async (input) => {
         input.tool_input.
         return {}
@@ -493,7 +493,7 @@ function createFakeMonaco(
       diagnosticsOptions = options;
     },
     hasTypeLibrary: () =>
-      typeLibraries.has("file:///node_modules/typed-claude-hooks/index.d.ts"),
+      typeLibraries.has("file:///node_modules/@typed-rocks/typed-claude-hooks/index.d.ts"),
     liveModels: () => models.size,
   };
 }

@@ -23,7 +23,7 @@ try {
   const packedMaps = packedFiles.filter((path) => path.endsWith(".map"));
   assert.deepEqual(packedMaps, [], `Published tarball must not ship source maps: ${packedMaps.join(", ")}`);
 
-  const packageRoot = resolve(consumerRoot, "node_modules/typed-claude-hooks");
+  const packageRoot = resolve(consumerRoot, "node_modules/@typed-rocks/typed-claude-hooks");
   mkdirSync(packageRoot, { recursive: true });
   execFileSync("tar", ["-xzf", resolve(consumerRoot, packed.filename), "--strip-components=1", "-C", packageRoot], {
     cwd: projectRoot,
@@ -34,7 +34,7 @@ try {
     [
       "--input-type=module",
       "--eval",
-      'import { runtimeCommand } from "typed-claude-hooks/compiler"; process.stdout.write(runtimeCommand("node"))',
+      'import { runtimeCommand } from "@typed-rocks/typed-claude-hooks/compiler"; process.stdout.write(runtimeCommand("node"))',
     ],
     { cwd: consumerRoot, encoding: "utf8" },
   );
@@ -43,7 +43,7 @@ try {
   const sourcePath = resolve(consumerRoot, "consumer.ts");
   writeFileSync(
     sourcePath,
-    'import { planArtifactPaths } from "typed-claude-hooks/compiler"\nconst artifact = planArtifactPaths({ event: "Stop", name: "stop" }, ".claude/hooks", "node")\nartifact.runtime satisfies "node" | "bun" | "deno"\n',
+    'import { planArtifactPaths } from "@typed-rocks/typed-claude-hooks/compiler"\nconst artifact = planArtifactPaths({ event: "Stop", name: "stop" }, ".claude/hooks", "node")\nartifact.runtime satisfies "node" | "bun" | "deno"\n',
   );
   execFileSync(
     process.execPath,

@@ -4,7 +4,7 @@ import { codeToHtml } from "shiki";
 const base = `${import.meta.env.BASE_URL.replace(/\/$/, "")}/`;
 const playground = `${base}playground/`;
 
-const initializer = `import { defineHandler } from "typed-claude-hooks"
+const initializer = `import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edit" }, async (input) => {
   if (input.tool_input.file_path.endsWith(".env")) {
@@ -18,7 +18,7 @@ export const protectEnvFiles = defineHandler("PreToolUse", { matcher: "Write|Edi
   return {}
 })`;
 
-const testing = `import { testHandler } from "typed-claude-hooks/testing"
+const testing = `import { testHandler } from "@typed-rocks/typed-claude-hooks/testing"
 import { protectEnvFiles } from "./hooks.config"
 
 const result = await testHandler(protectEnvFiles, {
@@ -92,7 +92,7 @@ const eventGroups = [
       <h2>Browser Playground</h2>
       <p><a href={playground}>Open the Playground</a> to author a hook with Monaco types and autocomplete. It compiles in your browser, previews the generated settings and file destinations, and downloads the source, Node artifacts, wrappers, and placement instructions as a ZIP.</p>
       <p>Place the editable source at <code>.typed-claude-hooks/hooks.config.ts</code> and generated artifacts under <code>.claude/hooks/typed-claude-hooks/</code>. The downloaded settings file is a snippet: merge its <code>hooks</code> property into <code>.claude/settings.json</code>; do not replace your existing settings.</p>
-      <p>The Playground does not execute hooks. It accepts one <code>hooks.config.ts</code> with direct named <code>export const</code> handlers initialized by <code>defineHandler(...)</code>. Multi-file configs and arbitrary or extra npm packages are not supported; imports are limited to <code>typed-claude-hooks</code>, <code>typed-claude-hooks/types</code>, and <code>node:*</code>. Downloads target Node only, not Bun or Deno. Source is not persisted or uploaded.</p>
+      <p>The Playground does not execute hooks. It accepts one <code>hooks.config.ts</code> with direct named <code>export const</code> handlers initialized by <code>defineHandler(...)</code>. Multi-file configs and arbitrary or extra npm packages are not supported; imports are limited to <code>@typed-rocks/typed-claude-hooks</code>, <code>@typed-rocks/typed-claude-hooks/types</code>, and <code>node:*</code>. Downloads target Node only, not Bun or Deno. Source is not persisted or uploaded.</p>
     </section>
 
     <section id="handlers">

@@ -4,7 +4,7 @@ import {
   createWrapperArtifact,
   generateRuntime,
   planArtifactPaths,
-} from "typed-claude-hooks/compiler";
+} from "@typed-rocks/typed-claude-hooks/compiler";
 import { discoverHandlers } from "./discover-handlers";
 import type {
   CompileInput,
@@ -92,6 +92,11 @@ async function buildHandler(
   };
 }
 
+// Derived from runtimeModule so a package rename cannot leave this filter behind.
+const runtimeModulePattern = new RegExp(
+  `^${runtimeModule.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}$`,
+);
+
 function virtualModulesPlugin(source: string, fileName: string): Plugin {
   const annotatedSource = annotatePureDefineHandlers(source, fileName);
   return {
@@ -101,7 +106,7 @@ function virtualModulesPlugin(source: string, fileName: string): Plugin {
         path: configModule,
         namespace: runtimeNamespace,
       }));
-      build.onResolve({ filter: /^typed-claude-hooks$/ }, () => ({
+      build.onResolve({ filter: runtimeModulePattern }, () => ({
         path: runtimeModule,
         namespace: runtimeNamespace,
       }));

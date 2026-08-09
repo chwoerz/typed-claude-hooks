@@ -7,8 +7,8 @@ import type {
 } from "./types";
 
 const allowedImports = new Set([
-  "typed-claude-hooks",
-  "typed-claude-hooks/types",
+  "@typed-rocks/typed-claude-hooks",
+  "@typed-rocks/typed-claude-hooks/types",
 ]);
 const nodeBuiltins = new Set([
   "assert",
@@ -248,7 +248,7 @@ function validateImport(
   }
   const message = nodeBuiltins.has(moduleName)
     ? `Use "node:${moduleName}" instead of the bare Node built-in "${moduleName}".`
-    : `The playground bundler cannot resolve "${moduleName}". Use typed-claude-hooks, typed-claude-hooks/types, or a node:* module; generated hooks retain Node runtime capabilities.`;
+    : `The playground bundler cannot resolve "${moduleName}". Use @typed-rocks/typed-claude-hooks, @typed-rocks/typed-claude-hooks/types, or a node:* module; generated hooks retain Node runtime capabilities.`;
   diagnostics.push(
     diagnostic(
       sourceFile,
@@ -330,7 +330,7 @@ function collectDefineHandlerImports(
 ): void {
   if (
     !ts.isStringLiteral(declaration.moduleSpecifier) ||
-    declaration.moduleSpecifier.text !== "typed-claude-hooks" ||
+    declaration.moduleSpecifier.text !== "@typed-rocks/typed-claude-hooks" ||
     declaration.importClause?.isTypeOnly
   ) {
     return;
@@ -430,7 +430,7 @@ function discoverDeclaration(
         fileName,
         initializer.expression,
         "PLAYGROUND_UNRELATED_CALL",
-        `Exported handler "${name}" must use a direct call to defineHandler imported from "typed-claude-hooks".`,
+        `Exported handler "${name}" must use a direct call to defineHandler imported from "@typed-rocks/typed-claude-hooks".`,
       ),
     );
     return undefined;
@@ -456,7 +456,7 @@ function discoverDeclaration(
         fileName,
         eventNode,
         "PLAYGROUND_UNKNOWN_EVENT",
-        `Unsupported hook event "${eventNode.text}". Use a HookEvent value exported by typed-claude-hooks/types.`,
+        `Unsupported hook event "${eventNode.text}". Use a HookEvent value exported by @typed-rocks/typed-claude-hooks/types.`,
       ),
     );
     return undefined;

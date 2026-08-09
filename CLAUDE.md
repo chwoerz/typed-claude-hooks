@@ -27,10 +27,10 @@ CLI builds produce `.mjs` hook bundles plus mandatory shell wrappers (`.sh` or `
 
 # Config API
 
-The config authoring API is `defineHandler` only. The `Runtime` type is exported from `typed-claude-hooks/types`, not the root package, and describes the CLI runtime option rather than the config API. Config files export handlers as named exports; the compiler auto-collects them by their `event` field. Do not add a default config export.
+The config authoring API is `defineHandler` only. The `Runtime` type is exported from `@typed-rocks/typed-claude-hooks/types`, not the root package, and describes the CLI runtime option rather than the config API. Config files export handlers as named exports; the compiler auto-collects them by their `event` field. Do not add a default config export.
 
 ```ts
-import { defineHandler } from "typed-claude-hooks"
+import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
 export const blockRm = defineHandler("PreToolUse", { matcher: "Bash" }, async (input) => {
   // ...

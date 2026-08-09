@@ -2,8 +2,8 @@ import * as ts from "typescript";
 import {
   generateBashWrapper as renderBashWrapper,
   generatePowerShellWrapper as renderPowerShellWrapper,
-} from "typed-claude-hooks/compiler";
-export { generateRuntime } from "typed-claude-hooks/compiler";
+} from "@typed-rocks/typed-claude-hooks/compiler";
+export { generateRuntime } from "@typed-rocks/typed-claude-hooks/compiler";
 
 export const generateBashWrapper = (mjsFileName: string) =>
   renderBashWrapper(mjsFileName, "node");
@@ -11,7 +11,7 @@ export const generatePowerShellWrapper = (mjsFileName: string) =>
   renderPowerShellWrapper(mjsFileName, "node");
 
 export const configModule = "playground:hooks.config.ts";
-export const runtimeModule = "typed-claude-hooks";
+export const runtimeModule = "@typed-rocks/typed-claude-hooks";
 export const runtimeNamespace = "playground-runtime";
 
 export const authoringRuntime = `

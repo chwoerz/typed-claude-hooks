@@ -16,7 +16,7 @@ import {
 import { readFile } from "node:fs/promises";
 
 const starter = `
-  import { defineHandler } from "typed-claude-hooks"
+  import { defineHandler } from "@typed-rocks/typed-claude-hooks"
 
   export const blockRm = defineHandler("PreToolUse", { matcher: "Bash" }, async (input) => ({
     hookSpecificOutput: input.tool_input.command.includes("rm ")
@@ -107,7 +107,7 @@ describe("buildHandlers", () => {
       {
         requestId: "multi",
         source: `
-        import { defineHandler } from "typed-claude-hooks"
+        import { defineHandler } from "@typed-rocks/typed-claude-hooks"
         export const before = defineHandler("PreToolUse", {
           matcher: "Bash",
           timeout: 5000,
@@ -140,7 +140,7 @@ describe("buildHandlers", () => {
 
   it("does not mark lexically shadowed defineHandler calls as pure", () => {
     const source = `
-      import { defineHandler } from "typed-claude-hooks"
+      import { defineHandler } from "@typed-rocks/typed-claude-hooks"
       function retainSideEffect(defineHandler) {
         defineHandler("shadowed-local-call")
       }
@@ -162,7 +162,7 @@ describe("buildHandlers", () => {
       {
         requestId: "shadowed-build",
         source: `
-          import { defineHandler } from "typed-claude-hooks"
+          import { defineHandler } from "@typed-rocks/typed-claude-hooks"
           {
             const defineHandler = (marker) => console.error(marker)
             defineHandler("shadowed-side-effect-marker")
@@ -186,7 +186,7 @@ describe("buildHandlers", () => {
         requestId: 2,
         source: `
         import { basename } from "node:path"
-        import { defineHandler } from "typed-claude-hooks"
+        import { defineHandler } from "@typed-rocks/typed-claude-hooks"
         export const stopped = defineHandler("Stop", async () => ({ systemMessage: basename("/tmp/file") }))
       `,
       },
@@ -202,7 +202,7 @@ describe("buildHandlers", () => {
       {
         requestId: "powershell",
         source: `
-          import { defineHandler } from "typed-claude-hooks"
+          import { defineHandler } from "@typed-rocks/typed-claude-hooks"
           export const stopped = defineHandler("Stop", { shell: "powershell" }, async () => ({}))
         `,
       },
@@ -315,8 +315,8 @@ describe("buildHandlers", () => {
 
   it("maps real esbuild virtual-config errors to the requested file name", async () => {
     const source = [
-      'import { defineHandler } from "typed-claude-hooks"',
-      'import { Runtime } from "typed-claude-hooks/types"',
+      'import { defineHandler } from "@typed-rocks/typed-claude-hooks"',
+      'import { Runtime } from "@typed-rocks/typed-claude-hooks/types"',
       'export const stopped = defineHandler("Stop", async () => ({ systemMessage: String(Runtime) }))',
     ].join("\n");
     const result = await buildHandlers(
@@ -328,7 +328,7 @@ describe("buildHandlers", () => {
     expect(result.diagnostics[0]).toMatchObject({
       fileName: "custom-hooks.ts",
       start: { line: 2, column: 25 },
-      sourceLine: 'import { Runtime } from "typed-claude-hooks/types"',
+      sourceLine: 'import { Runtime } from "@typed-rocks/typed-claude-hooks/types"',
     });
   });
 
