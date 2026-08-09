@@ -25,7 +25,20 @@ describe("loadConfig", () => {
     ["known options", "unknown-option.ts", /unknown.*option/i],
     ["own option validators", "inherited-option-name.ts", /unknown.*option/i],
     ["unique handler instances", "duplicate-handler.ts", /same handler instance/i],
-    ["identifier export names", "invalid-export-name.mts", /handler export name.*valid javascript identifier/i],
+    ["portable export names", "invalid-export-name.mts", /handler export name.*portable artifact name/i],
+    ["portable artifact names", "unsafe-export-name.ts", /handler export name.*portable artifact name/i],
+    [
+      "artifact names without a trailing period",
+      "trailing-period-export-name.mts",
+      /handler export name.*portable artifact name/i,
+    ],
+    [
+      "artifact names without a trailing space",
+      "trailing-space-export-name.mts",
+      /handler export name.*portable artifact name/i,
+    ],
+    ["non-reserved artifact names", "reserved-export-name.ts", /handler export name.*reserved/i],
+    ["case-insensitively unique names", "colliding-export-names.ts", /handler export names.*case-insensitive/i],
   ])("requires %s", async (_requirement, fixture, message) => {
     const configPath = resolve(import.meta.dirname, "../fixtures/configs", fixture);
 

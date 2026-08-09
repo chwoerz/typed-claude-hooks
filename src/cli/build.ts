@@ -58,7 +58,11 @@ export async function build(options: BuildOptions): Promise<void> {
   const managedDir = resolve(hooksDir, MANAGED_SUBDIR);
 
   const managedLogicalPath = projectRelativeLogicalPath(projectRoot, managedDir);
-  const managedCommandPrefix = `\${CLAUDE_PROJECT_DIR}/${managedLogicalPath}/`;
+  if (/["\r\n]/.test(managedLogicalPath)) {
+    throw new Error(
+      `Generated hook command path cannot contain double quotes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
+    );
+  }
   const loaded = await loadConfig(configPath);
 
   const handlers = extractHandlers(loaded);
@@ -81,7 +85,6 @@ export async function build(options: BuildOptions): Promise<void> {
   const merged = mergeHooksIntoSettings({
     existingSettings,
     bundledFiles: logicalBundledFiles,
-    managedCommandPrefix,
     projectRoot: ".",
   });
   const settingsContents = `${JSON.stringify(merged, null, 2)}\n`;

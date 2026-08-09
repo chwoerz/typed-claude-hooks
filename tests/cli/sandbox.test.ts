@@ -18,6 +18,12 @@ function writeInstalled(sandboxDir: string, version: string): void {
   writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name: "typed-claude-hooks", version }));
 }
 
+function writeInstalledPackage(sandboxDir: string, name: string): void {
+  const dir = resolve(sandboxDir, "node_modules", name);
+  mkdirSync(dir, { recursive: true });
+  writeFileSync(resolve(dir, "package.json"), JSON.stringify({ name }));
+}
+
 describe("ensureSandbox", () => {
   afterEach(() => {
     for (const path of tempDirs) {
@@ -43,11 +49,56 @@ describe("ensureSandbox", () => {
     const sandboxDir = makeSandboxPath();
     ensureSandbox({ sandboxDir, version: "1.2.3", install: vi.fn() });
     writeInstalled(sandboxDir, "1.2.3");
+    writeInstalledPackage(sandboxDir, "@types/node");
     const install = vi.fn();
 
     ensureSandbox({ sandboxDir, version: "1.2.3", install });
 
     expect(install).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    "dependencies",
+    "devDependencies",
+  ] as const)("installs when a declared %s package is missing", (dependencySection) => {
+    const sandboxDir = makeSandboxPath();
+    ensureSandbox({ sandboxDir, version: "1.2.3", install: vi.fn() });
+    writeFileSync(
+      resolve(sandboxDir, "package.json"),
+      JSON.stringify({
+        dependencies: {
+          "typed-claude-hooks": "1.2.3",
+          ...(dependencySection === "dependencies" ? { zod: "^3.0.0" } : {}),
+        },
+        ...(dependencySection === "devDependencies" ? { devDependencies: { zod: "^3.0.0" } } : {}),
+      }),
+    );
+    writeInstalled(sandboxDir, "1.2.3");
+    const install = vi.fn();
+
+    ensureSandbox({ sandboxDir, version: "1.2.3", install });
+
+    const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
+    expect(manifest.dependencies["typed-claude-hooks"]).toBe("1.2.3");
+    expect(install).toHaveBeenCalledWith(sandboxDir);
+    expect(install).toHaveBeenCalledTimes(1);
+  });
+
+  it.each(["file:..", "link:.."])("preserves a %s spec when only a secondary dependency is missing", (spec) => {
+    const sandboxDir = makeSandboxPath();
+    ensureSandbox({ sandboxDir, version: "1.0.0", install: vi.fn() });
+    writeFileSync(
+      resolve(sandboxDir, "package.json"),
+      JSON.stringify({ dependencies: { "typed-claude-hooks": spec, zod: "^3.0.0" } }),
+    );
+    writeInstalled(sandboxDir, "9.9.9");
+    const install = vi.fn();
+
+    ensureSandbox({ sandboxDir, version: "1.2.3", install });
+
+    const manifest = JSON.parse(readFileSync(resolve(sandboxDir, "package.json"), "utf8"));
+    expect(manifest.dependencies["typed-claude-hooks"]).toBe(spec);
+    expect(install).toHaveBeenCalledTimes(1);
   });
 
   it("reinstalls and repins when the installed version drifts", () => {

@@ -3,8 +3,8 @@ import type { HookInputFor, HookOutputFor, TypedHandler } from "../types/mapping
 
 type BaseDefaults = Pick<BaseHookInput, "session_id" | "transcript_path" | "cwd">;
 
-type PartialInput<E extends HookEvent> = Partial<BaseDefaults> &
-  Omit<HookInputFor<E>, keyof BaseDefaults | "hook_event_name">;
+type PartialInput<Input extends BaseHookInput> = Partial<BaseDefaults> &
+  Omit<Input, keyof BaseDefaults | "hook_event_name">;
 
 const BASE_DEFAULTS: BaseDefaults = {
   session_id: "test-session",
@@ -12,15 +12,15 @@ const BASE_DEFAULTS: BaseDefaults = {
   cwd: "/tmp",
 };
 
-export async function testHandler<E extends HookEvent>(
-  handler: TypedHandler<E>,
-  partialInput: PartialInput<E>,
+export async function testHandler<E extends HookEvent, Input extends HookInputFor<E>>(
+  handler: TypedHandler<E, Input>,
+  partialInput: PartialInput<Input>,
 ): Promise<HookOutputFor<E>> {
   const input = {
     ...BASE_DEFAULTS,
     hook_event_name: handler.event,
     ...partialInput,
-  } as HookInputFor<E>;
+  } as Input;
 
   const result = await handler.handler(input);
   const hookSpecificOutput = result.hookSpecificOutput;

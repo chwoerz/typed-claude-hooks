@@ -1,4 +1,5 @@
 import { buildHookEntries, type MatcherEntry, type PlannedArtifactPaths } from "./artifact-plan.js";
+import { HOOK_EVENTS } from "./hook-events.js";
 
 interface ExistingHookEntry {
   command?: string;
@@ -12,23 +13,27 @@ interface ExistingMatcherEntry {
 export interface MergeOptions {
   existingSettings: Record<string, unknown>;
   bundledFiles: PlannedArtifactPaths[];
-  managedCommandPrefix: string;
   projectRoot: string;
 }
 
-function isManagedHook(hook: ExistingHookEntry, managedCommandPrefix: string): boolean {
+const HOOK_EVENT_PATTERN = Object.keys(HOOK_EVENTS).join("|");
+const GENERATED_HOOK_PATH = String.raw`\$\{CLAUDE_PROJECT_DIR\}/(?:[^/"\r\n]+/)*typed-claude-hooks/(?:${HOOK_EVENT_PATTERN})/[^/"\r\n]+`;
+const QUOTED_GENERATED_HOOK = new RegExp(`^"${GENERATED_HOOK_PATH}\\.(?:ps1|sh)"$`);
+const LEGACY_GENERATED_BASH_HOOK = new RegExp(`^${GENERATED_HOOK_PATH}\\.sh$`);
+const GENERATED_POWERSHELL_HOOK = new RegExp(`^& "${GENERATED_HOOK_PATH}\\.ps1"$`);
+
+function isManagedHook(hook: ExistingHookEntry): boolean {
   const { command } = hook;
   return (
     typeof command === "string" &&
-    ((command.startsWith(`"${managedCommandPrefix}`) && /\.(?:ps1|sh)"$/.test(command)) ||
-      (command.startsWith(`& "${managedCommandPrefix}`) && /\.ps1"$/.test(command)) ||
-      (command.startsWith(managedCommandPrefix) && /\.sh$/.test(command)))
+    (QUOTED_GENERATED_HOOK.test(command) ||
+      LEGACY_GENERATED_BASH_HOOK.test(command) ||
+      GENERATED_POWERSHELL_HOOK.test(command))
   );
 }
 
 function stripManagedFromExisting(
   existingHooks: Record<string, ExistingMatcherEntry[]>,
-  managedCommandPrefix: string,
 ): Record<string, ExistingMatcherEntry[]> {
   return Object.fromEntries(
     Object.entries(existingHooks)
@@ -36,7 +41,7 @@ function stripManagedFromExisting(
         const cleaned = matchers
           .map((m) => ({
             ...m,
-            hooks: (m.hooks ?? []).filter((h) => !isManagedHook(h, managedCommandPrefix)),
+            hooks: (m.hooks ?? []).filter((h) => !isManagedHook(h)),
           }))
           .filter((m) => m.hooks.length > 0);
         return [event, cleaned] as const;
@@ -70,10 +75,10 @@ function mergeByMatcher(existing: ExistingMatcherEntry[], managed: MatcherEntry[
 }
 
 export function mergeHooksIntoSettings(options: MergeOptions): Record<string, unknown> {
-  const { existingSettings, bundledFiles, managedCommandPrefix, projectRoot } = options;
+  const { existingSettings, bundledFiles, projectRoot } = options;
   const newHookEntries = buildHookEntries(bundledFiles, projectRoot);
   const existingHooks = (existingSettings.hooks ?? {}) as Record<string, ExistingMatcherEntry[]>;
-  const cleaned = stripManagedFromExisting(existingHooks, managedCommandPrefix);
+  const cleaned = stripManagedFromExisting(existingHooks);
 
   const allEvents = [...new Set([...Object.keys(cleaned), ...Object.keys(newHookEntries)])];
 

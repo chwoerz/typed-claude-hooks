@@ -45,7 +45,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: {},
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -65,7 +64,6 @@ describe("mergeHooksIntoSettings", () => {
         statusLine: { type: "command" },
       },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -86,7 +84,7 @@ describe("mergeHooksIntoSettings", () => {
             hooks: [
               {
                 type: "command",
-                command: `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Write/oldHandler.sh"`,
+                command: `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/PreToolUse/oldHandler.sh"`,
               },
             ],
           },
@@ -97,7 +95,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: existing,
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -110,7 +107,7 @@ describe("mergeHooksIntoSettings", () => {
     const oldManaged = preToolUse.find((m: Record<string, unknown>) =>
       m.hooks.some(
         (h: Record<string, unknown>) =>
-          h.command === `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Write/oldHandler.sh"`,
+          h.command === `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/PreToolUse/oldHandler.sh"`,
       ),
     );
     expect(oldManaged).toBeUndefined();
@@ -141,7 +138,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: existing,
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -178,7 +174,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: existing,
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -217,7 +212,7 @@ describe("mergeHooksIntoSettings", () => {
             hooks: [
               {
                 type: "command",
-                command: `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/Write/oldHandler.sh"`,
+                command: `"\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/PreToolUse/oldHandler.sh"`,
               },
             ],
           },
@@ -248,7 +243,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: existing,
       bundledFiles: noWriteHandlers,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -280,7 +274,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: {},
       bundledFiles: filesWithTimeout,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -291,7 +284,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: {},
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -302,7 +294,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: {},
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -317,7 +308,6 @@ describe("mergeHooksIntoSettings", () => {
     const result = mergeHooksIntoSettings({
       existingSettings: {},
       bundledFiles: [{ ...bundledFiles[1], runtime: "deno" }],
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -343,7 +333,6 @@ describe("mergeHooksIntoSettings", () => {
           },
         },
       ],
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -360,7 +349,21 @@ describe("mergeHooksIntoSettings", () => {
         },
       },
       bundledFiles,
-      managedCommandPrefix,
+      projectRoot: "/project",
+    });
+
+    expect(result.hooks.Stop[0].hooks[0].command).toBe(auditCommand);
+  });
+
+  it("preserves deep user commands under a typed-claude-hooks directory", () => {
+    const auditCommand = `"\${CLAUDE_PROJECT_DIR}/audit/typed-claude-hooks/reports/custom.sh"`;
+    const result = mergeHooksIntoSettings({
+      existingSettings: {
+        hooks: {
+          Stop: [{ hooks: [{ type: "command", command: auditCommand }] }],
+        },
+      },
+      bundledFiles,
       projectRoot: "/project",
     });
 
@@ -376,7 +379,6 @@ describe("mergeHooksIntoSettings", () => {
         },
       },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -401,7 +403,6 @@ describe("mergeHooksIntoSettings", () => {
         },
       },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -426,7 +427,6 @@ describe("mergeHooksIntoSettings", () => {
         },
       },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -460,7 +460,6 @@ describe("mergeHooksIntoSettings", () => {
           },
         },
       ],
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -490,7 +489,6 @@ describe("mergeHooksIntoSettings", () => {
         },
       },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -502,13 +500,11 @@ describe("mergeHooksIntoSettings", () => {
     const first = mergeHooksIntoSettings({
       existingSettings: { permissions: { allow: ["Bash(npm test)"] } },
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
     const second = mergeHooksIntoSettings({
       existingSettings: first,
       bundledFiles,
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 
@@ -529,7 +525,6 @@ describe("mergeHooksIntoSettings", () => {
           },
         },
       ],
-      managedCommandPrefix,
       projectRoot: "/project",
     });
 

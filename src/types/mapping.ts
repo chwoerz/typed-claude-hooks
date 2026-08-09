@@ -45,12 +45,17 @@ type NarrowedToolInputForName<E extends ToolHookEvent, Name extends string> = E 
     }
   : never;
 
-export type NarrowedToolInput<E extends ToolHookEvent, M extends string> =
+type NarrowedToolInputCandidate<E extends ToolHookEvent, M extends string> =
   ParseMatcher<M> extends infer Name extends string
     ? Name extends ParseMatcher<M>
       ? NarrowedToolInputForName<E, Name>
       : never
     : never;
+
+export type NarrowedToolInput<E extends ToolHookEvent, M extends string> = Extract<
+  NarrowedToolInputCandidate<E, M>,
+  HookInputFor<E>
+>;
 
 export interface HandlerOptions {
   matcher?: string;
@@ -63,7 +68,8 @@ export interface HandlerOptions {
   asyncRewake?: boolean;
 }
 
-export interface TypedHandler<E extends HookEvent> extends Readonly<HandlerOptions> {
+export interface TypedHandler<E extends HookEvent, Input extends HookInputFor<E> = HookInputFor<E>>
+  extends Readonly<HandlerOptions> {
   readonly event: E;
-  readonly handler: (input: HookInputFor<E>) => Promise<HookOutputFor<E>>;
+  readonly handler: (input: Input) => Promise<HookOutputFor<E>>;
 }

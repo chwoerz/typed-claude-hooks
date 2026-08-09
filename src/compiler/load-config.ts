@@ -2,44 +2,14 @@ import { resolve } from "node:path";
 import * as esbuild from "esbuild";
 import type { HookEvent } from "../types/index.js";
 import type { TypedHandler } from "../types/mapping.js";
+import { HOOK_EVENTS } from "./hook-events.js";
 
 export interface LoadedConfig {
   handlerExports: Record<string, TypedHandler<HookEvent>>;
 }
 
-const HOOK_EVENTS: Record<HookEvent, true> = {
-  PreToolUse: true,
-  PostToolUse: true,
-  PostToolUseFailure: true,
-  PostToolBatch: true,
-  Notification: true,
-  UserPromptSubmit: true,
-  UserPromptExpansion: true,
-  SessionStart: true,
-  SessionEnd: true,
-  Stop: true,
-  StopFailure: true,
-  SubagentStart: true,
-  SubagentStop: true,
-  PreCompact: true,
-  PostCompact: true,
-  PermissionRequest: true,
-  PermissionDenied: true,
-  Setup: true,
-  TeammateIdle: true,
-  TaskCreated: true,
-  TaskCompleted: true,
-  Elicitation: true,
-  ElicitationResult: true,
-  ConfigChange: true,
-  WorktreeCreate: true,
-  WorktreeRemove: true,
-  InstructionsLoaded: true,
-  CwdChanged: true,
-  FileChanged: true,
-  MessageDisplay: true,
-};
-const IDENTIFIER = /^[A-Za-z_$][\w$]*$/;
+const PORTABLE_ARTIFACT_NAME = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const WINDOWS_RESERVED_NAME = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value != null && typeof value === "object" && !Array.isArray(value);
@@ -91,6 +61,31 @@ function validateNoDuplicates(handlers: Record<string, TypedHandler<HookEvent>>)
   });
 }
 
+function validateHandlerNames(entries: [string, unknown][]): void {
+  const unsafeName = entries.find(([name]) => !PORTABLE_ARTIFACT_NAME.test(name));
+  if (unsafeName) {
+    throw new Error(`Handler export name ${JSON.stringify(unsafeName[0])} must be a portable artifact name`);
+  }
+
+  const reservedName = entries.find(([name]) => WINDOWS_RESERVED_NAME.test(name));
+  if (reservedName) {
+    throw new Error(`Handler export name ${JSON.stringify(reservedName[0])} is reserved on Windows`);
+  }
+
+  const seen = new Set<string>();
+  const collidingName = entries.find(([name]) => {
+    const normalizedName = name.toLowerCase();
+    if (seen.has(normalizedName)) return true;
+    seen.add(normalizedName);
+    return false;
+  });
+  if (collidingName) {
+    throw new Error(
+      `Handler export names must be unique in case-insensitive filesystems (at least ${JSON.stringify(collidingName[0])})`,
+    );
+  }
+}
+
 export async function loadConfig(configPath: string): Promise<LoadedConfig> {
   const absConfigPath = resolve(configPath);
   const result = await esbuild.build({
@@ -106,10 +101,6 @@ export async function loadConfig(configPath: string): Promise<LoadedConfig> {
   const dataUrl = `data:text/javascript;base64,${Buffer.from(output.contents).toString("base64")}`;
   const moduleExports = (await import(dataUrl)) as Record<string, unknown>;
   const namedEntries = Object.entries(moduleExports).filter(([name]) => name !== "default");
-  const invalidName = namedEntries.find(([name, value]) => isHandlerCandidate(value) && !IDENTIFIER.test(name));
-  if (invalidName) {
-    throw new Error(`Handler export name ${JSON.stringify(invalidName[0])} must be a valid JavaScript identifier`);
-  }
   const invalidEntry = namedEntries.find(([, value]) => isHandlerCandidate(value) && !validateHandler(value));
   if (invalidEntry) {
     throw new Error(`Invalid handler export ${JSON.stringify(invalidEntry[0])}`);
@@ -119,6 +110,7 @@ export async function loadConfig(configPath: string): Promise<LoadedConfig> {
   if (handlerEntries.length === 0) {
     throw new Error("Config file has no named handlers");
   }
+  validateHandlerNames(handlerEntries);
   const handlerExports = Object.fromEntries(handlerEntries) as Record<string, TypedHandler<HookEvent>>;
   validateNoDuplicates(handlerExports);
   return { handlerExports };

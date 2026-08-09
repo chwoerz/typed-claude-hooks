@@ -13,7 +13,7 @@ export function defineHandler<E extends ToolHookEvent, M extends string>(
   event: E,
   options: HandlerOptions & { matcher: M },
   handler: (input: NarrowedToolInput<E, M>) => Promise<HookOutputFor<E>>,
-): TypedHandler<E>;
+): TypedHandler<E, NarrowedToolInput<E, M>>;
 
 export function defineHandler<E extends HookEvent>(
   event: E,

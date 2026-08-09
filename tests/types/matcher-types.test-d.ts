@@ -1,4 +1,6 @@
 import { describe, expectTypeOf, it } from "vitest";
+import { defineHandler } from "../../src/authoring/define-handler.js";
+import { testHandler } from "../../src/testing/test-handler.js";
 import type { BashInput, FileEditInput, FileWriteInput } from "../../src/types/generated/tool-inputs.js";
 import type { NarrowedToolInput, ParseMatcher, ToolHookEvent } from "../../src/types/mapping.js";
 
@@ -55,5 +57,46 @@ describe("NarrowedToolInput", () => {
   it("keeps unknown for non-builtin tool name", () => {
     type Result = NarrowedToolInput<"PreToolUse", "mcp__server__tool">;
     expectTypeOf<Result["tool_input"]>().toEqualTypeOf<unknown>();
+  });
+});
+
+describe("matcher handler input retention", () => {
+  const bashHandler = defineHandler("PreToolUse", { matcher: "Bash" }, async () => ({}));
+
+  it("retains the narrowed input on the handler", () => {
+    expectTypeOf(bashHandler.handler).parameter(0).toEqualTypeOf<NarrowedToolInput<"PreToolUse", "Bash">>();
+  });
+
+  it("accepts matching input in testHandler", () => {
+    testHandler(bashHandler, {
+      tool_name: "Bash",
+      tool_input: { command: "npm test" },
+      tool_use_id: "tool-use-id",
+    });
+  });
+
+  it("rejects another tool input in testHandler", () => {
+    const writeInput = {
+      tool_name: "Write",
+      tool_input: { file_path: "app.ts", content: "code" },
+      tool_use_id: "tool-use-id",
+    } as const;
+
+    // @ts-expect-error Bash handlers only accept Bash inputs
+    testHandler(bashHandler, writeInput);
+  });
+
+  it("requires matcher-specific fields in testHandler", () => {
+    testHandler(bashHandler, {
+      tool_name: "Bash",
+      // @ts-expect-error Bash input requires command
+      tool_input: {},
+      tool_use_id: "tool-use-id",
+    });
+  });
+
+  it("keeps normal handlers working", () => {
+    const stopHandler = defineHandler("Stop", async () => ({}));
+    testHandler(stopHandler, { stop_hook_active: false });
   });
 });

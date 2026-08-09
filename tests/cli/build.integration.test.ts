@@ -200,6 +200,30 @@ describe("build command", () => {
     expect(readFileSync(SETTINGS_PATH, "utf-8")).toBe(firstSettings);
   });
 
+  it("removes generated settings entries when hooksDir changes", async () => {
+    const oldHooksDir = resolve(TMP_DIR, "old-hooks");
+    const newHooksDir = resolve(TMP_DIR, "new-hooks");
+
+    await build({
+      config: FIXTURE_CONFIG,
+      output: SETTINGS_PATH,
+      hooksDir: oldHooksDir,
+    });
+    await build({
+      config: FIXTURE_CONFIG,
+      output: SETTINGS_PATH,
+      hooksDir: newHooksDir,
+    });
+
+    const settings = JSON.parse(readFileSync(SETTINGS_PATH, "utf-8")) as GeneratedSettings;
+    const commands = Object.values(settings.hooks).flatMap((matchers) =>
+      matchers.flatMap((matcher) => matcher.hooks.map((hook) => hook.command)),
+    );
+    expect(commands).toHaveLength(2);
+    expect(commands.every((command) => command.includes("/new-hooks/typed-claude-hooks/"))).toBe(true);
+    expect(commands.every((command) => !command.includes("/old-hooks/typed-claude-hooks/"))).toBe(true);
+  });
+
   it("rewrites valid generated artifacts on a successful rebuild", async () => {
     const options = {
       config: FIXTURE_CONFIG,

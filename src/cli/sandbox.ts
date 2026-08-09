@@ -1,5 +1,11 @@
 import { relative, resolve } from "node:path";
-import { npmInstall, planDependencySync, readDependencyState, writeDeclaredSpec } from "./sandbox-deps.js";
+import {
+  hasUnresolvedDependencies,
+  npmInstall,
+  planDependencySync,
+  readDependencyState,
+  writeDeclaredSpec,
+} from "./sandbox-deps.js";
 import { scaffoldSandbox } from "./sandbox-templates.js";
 import { cliVersion } from "./version.js";
 
@@ -18,9 +24,9 @@ export function ensureSandbox(options: EnsureSandboxOptions): string[] {
   }
 
   const plan = planDependencySync(readDependencyState(sandboxDir), version);
-  if (plan.action === "skip") return created;
+  if (plan.action === "skip" && !hasUnresolvedDependencies(sandboxDir)) return created;
 
-  writeDeclaredSpec(sandboxDir, plan.spec);
+  if (plan.action === "install") writeDeclaredSpec(sandboxDir, plan.spec);
   console.log(`Installing typed-claude-hooks@${plan.spec}...`);
   install(sandboxDir);
   return created;
