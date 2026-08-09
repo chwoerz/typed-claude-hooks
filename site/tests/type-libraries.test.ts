@@ -1,4 +1,4 @@
-import { builtinModules } from "node:module";
+import { isBuiltin } from "node:module";
 import ts from "typescript";
 import { describe, expect, it } from "vitest";
 import {
@@ -8,9 +8,6 @@ import {
   typeVirtualFiles,
 } from "../src/playground/type-libraries";
 
-const nodeBuiltins = new Set(
-  builtinModules.flatMap((moduleName) => [moduleName, `node:${moduleName}`]),
-);
 const compilerOptions: ts.CompilerOptions = {
   module: ts.ModuleKind.NodeNext,
   moduleResolution: ts.ModuleResolutionKind.NodeNext,
@@ -97,7 +94,12 @@ describe("playground type libraries", () => {
       const dependencies = ts.preProcessFile(content, true, true);
       const unresolvedModules = dependencies.importedFiles.flatMap(
         ({ fileName }) => {
-          if (nodeBuiltins.has(fileName)) {
+          // isBuiltin, unlike the builtinModules list, reports the
+          // prefix-only modules (node:test, node:sqlite, node:sea,
+          // node:test/reporters) on every Node version. builtinModules only
+          // began listing them in Node 23.5, so an allowlist derived from it
+          // flags those as unresolved on any Node below that.
+          if (isBuiltin(fileName)) {
             return [];
           }
           const result = ts.resolveModuleName(
