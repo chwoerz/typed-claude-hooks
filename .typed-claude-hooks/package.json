@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
-    "typed-claude-hooks": "file:.."
+    "typed-claude-hooks": "0.1.0"
   },
   "devDependencies": {
     "@types/node": "^22"
