@@ -32,6 +32,23 @@ function isManagedHook(hook: ExistingHookEntry): boolean {
   );
 }
 
+/**
+ * Managed entries left over from a previous `--hooks-dir` are stripped too, so any
+ * `typed-claude-hooks/<Event>/` directory counts as the managed namespace regardless of where it
+ * sits. Commands outside the directory this build writes to are reported so the removal of a
+ * look-alike hook the user wrote themselves is never silent.
+ */
+export function staleManagedCommands(existingSettings: Record<string, unknown>, managedLogicalPath: string): string[] {
+  const currentPrefix = `\${CLAUDE_PROJECT_DIR}/${managedLogicalPath}/`;
+  const existingHooks = (existingSettings.hooks ?? {}) as Record<string, ExistingMatcherEntry[]>;
+
+  return Object.values(existingHooks)
+    .flatMap((matchers) => matchers.flatMap((matcher) => matcher.hooks ?? []))
+    .filter(isManagedHook)
+    .map((hook) => hook.command as string)
+    .filter((command) => !command.replace(/^& /, "").replace(/^"/, "").startsWith(currentPrefix));
+}
+
 function stripManagedFromExisting(
   existingHooks: Record<string, ExistingMatcherEntry[]>,
 ): Record<string, ExistingMatcherEntry[]> {

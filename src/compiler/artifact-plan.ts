@@ -34,18 +34,32 @@ function normalizePath(filePath: string): string {
   return filePath.replaceAll("\\", "/").replace(/\/$/, "");
 }
 
+// A backslash is a legal character in a POSIX file name, so it cannot be treated as a separator
+// unless the path is rooted the way only a Windows path can be — a drive letter or a UNC share.
+function isWindowsPath(filePath: string): boolean {
+  const normalized = filePath.replaceAll("\\", "/");
+  return windowsDrive(normalized.split("/")[0]) !== undefined || uncRoot(normalized) !== undefined;
+}
+
 function joinPath(...parts: string[]): string {
-  const separator = parts[0].includes("\\") ? "\\" : "/";
+  const windows = isWindowsPath(parts[0]);
+  const separator = windows ? "\\" : "/";
+  const separators = windows ? /[\\/]/g : /\//g;
+  const trailingSeparator = windows ? /[\\/]$/ : /\/$/;
+  const leadingSeparator = windows ? /^[\\/]/ : /^\//;
   return parts
     .map((part, index) => {
-      const normalized = part.replaceAll(/[\\/]/g, separator).replace(/[\\/]$/, "");
-      return index === 0 ? normalized : normalized.replace(/^[\\/]/, "");
+      const normalized = part.replaceAll(separators, separator).replace(trailingSeparator, "");
+      return index === 0 ? normalized : normalized.replace(leadingSeparator, "");
     })
     .join(separator);
 }
 
 function fileNameFromPath(filePath: string): string {
-  return normalizePath(filePath).split("/").at(-1) ?? "";
+  const trimmed = isWindowsPath(filePath)
+    ? filePath.replaceAll("\\", "/").replace(/\/$/, "")
+    : filePath.replace(/\/$/, "");
+  return trimmed.split("/").at(-1) ?? "";
 }
 
 function relativePath(from: string, to: string): string {

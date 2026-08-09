@@ -120,6 +120,18 @@ describe("artifact plan", () => {
     expect(snippet.hooks.Stop[0].hooks[0].command).toBe(`"\${CLAUDE_PROJECT_DIR}/.claude/hooks/Stop/onStop.sh"`);
   });
 
+  it("keeps a backslash in a POSIX directory name out of the path separators", () => {
+    const artifact = planArtifactPaths(
+      { event: "Stop", name: "onStop" },
+      "/home/user/my\\project/.claude/hooks",
+      "node",
+    );
+
+    expect(artifact.filePath).toBe("/home/user/my\\project/.claude/hooks/Stop/onStop.mjs");
+    expect(artifact.wrapper.filePath).toBe("/home/user/my\\project/.claude/hooks/Stop/onStop.sh");
+    expect(artifact.wrapper.contents).toContain('"$SCRIPT_DIR/onStop.mjs"');
+  });
+
   it("rejects UNC settings paths on a different server or share", () => {
     const artifact = planArtifactPaths({ event: "Stop", name: "onStop" }, "\\\\server\\other-share\\hooks", "node");
 
@@ -143,6 +155,12 @@ describe("project-relative logical paths", () => {
   it("rejects Windows targets on a different drive", () => {
     expect(() => projectRelativeLogicalPath("C:\\project", "D:\\hooks\\handler.sh", "win32")).toThrow(
       /different drives.*C:.*D:/i,
+    );
+  });
+
+  it("leaves a backslash in a POSIX file name intact", () => {
+    expect(projectRelativeLogicalPath("/home/user/project", "/home/user/project/hooks/my\\handler.sh", "linux")).toBe(
+      "hooks/my\\handler.sh",
     );
   });
 });

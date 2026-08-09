@@ -17,6 +17,7 @@ const MISSING_CONFIG_PATH = resolve(TMP_DIR, "missing.config.ts");
 
 const unsafePathCharacters = [
   ["double quote", '"'],
+  ["backslash", "\\"],
   ["carriage return", "\r"],
   ["line feed", "\n"],
 ] as const;
@@ -58,7 +59,7 @@ describe("build", () => {
     writeFileSync(settingsPath, settingsContents);
 
     await expect(build({ config: MISSING_CONFIG_PATH, output: settingsPath })).rejects.toThrow(
-      `Generated hook command path cannot contain double quotes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
+      `Generated hook command path cannot contain double quotes, backslashes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
     );
 
     expect(readFileSync(settingsPath, "utf-8")).toBe(settingsContents);
@@ -76,7 +77,7 @@ describe("build", () => {
     writeFileSync(SETTINGS_PATH, settingsContents);
 
     await expect(build({ config: MISSING_CONFIG_PATH, output: SETTINGS_PATH, hooksDir })).rejects.toThrow(
-      `Generated hook command path cannot contain double quotes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
+      `Generated hook command path cannot contain double quotes, backslashes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
     );
 
     expect(readFileSync(SETTINGS_PATH, "utf-8")).toBe(settingsContents);

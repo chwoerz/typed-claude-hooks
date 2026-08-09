@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { PlannedArtifactPaths } from "../../src/compiler/artifact-plan.js";
-import { mergeHooksIntoSettings } from "../../src/compiler/merge-hooks.js";
+import { mergeHooksIntoSettings, staleManagedCommands } from "../../src/compiler/merge-hooks.js";
 
 describe("mergeHooksIntoSettings", () => {
   const managedCommandPrefix = `\${CLAUDE_PROJECT_DIR}/.claude/hooks/typed-claude-hooks/`;
@@ -509,6 +509,52 @@ describe("mergeHooksIntoSettings", () => {
     });
 
     expect(second).toEqual(first);
+  });
+
+  it("claims any typed-claude-hooks/<event> directory as the managed namespace", () => {
+    const nestedCommand = `"\${CLAUDE_PROJECT_DIR}/vendor/typed-claude-hooks/Stop/custom.sh"`;
+    const existingSettings = {
+      hooks: {
+        Stop: [{ hooks: [{ type: "command", command: nestedCommand }] }],
+      },
+    };
+
+    const result = mergeHooksIntoSettings({ existingSettings, bundledFiles, projectRoot: "/project" });
+
+    expect(result.hooks.Stop.flatMap((entry: { hooks: { command: string }[] }) => entry.hooks)).not.toContainEqual(
+      expect.objectContaining({ command: nestedCommand }),
+    );
+    expect(staleManagedCommands(existingSettings, ".claude/hooks/typed-claude-hooks")).toEqual([nestedCommand]);
+  });
+
+  it("does not report managed commands inside the directory this build writes to", () => {
+    const existingSettings = {
+      hooks: {
+        Stop: [
+          {
+            hooks: [
+              { type: "command", command: `"${managedCommandPrefix}Stop/onStop.sh"` },
+              { type: "command", command: `& "${managedCommandPrefix}Stop/onStop.ps1"` },
+              { type: "command", command: `${managedCommandPrefix}Stop/legacy.sh` },
+              { type: "command", command: "echo manual" },
+            ],
+          },
+        ],
+      },
+    };
+
+    expect(staleManagedCommands(existingSettings, ".claude/hooks/typed-claude-hooks")).toEqual([]);
+  });
+
+  it("reports managed commands left behind by a previous hooks directory", () => {
+    const staleCommand = `"\${CLAUDE_PROJECT_DIR}/build/typed-claude-hooks/Stop/onStop.sh"`;
+    const existingSettings = {
+      hooks: {
+        Stop: [{ hooks: [{ type: "command", command: staleCommand }] }],
+      },
+    };
+
+    expect(staleManagedCommands(existingSettings, ".claude/hooks/typed-claude-hooks")).toEqual([staleCommand]);
   });
 
   it("normalizes Windows separators in generated commands", () => {

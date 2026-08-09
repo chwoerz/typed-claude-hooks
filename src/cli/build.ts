@@ -4,7 +4,7 @@ import type { PlannedArtifact } from "../compiler/artifact-plan.js";
 import { bundleHandlers } from "../compiler/bundle-handlers.js";
 import { extractHandlers } from "../compiler/extract-handlers.js";
 import { loadConfig } from "../compiler/load-config.js";
-import { mergeHooksIntoSettings } from "../compiler/merge-hooks.js";
+import { mergeHooksIntoSettings, staleManagedCommands } from "../compiler/merge-hooks.js";
 import { projectRelativeLogicalPath } from "../compiler/project-path.js";
 import type { Runtime } from "../types/mapping.js";
 
@@ -58,9 +58,9 @@ export async function build(options: BuildOptions): Promise<void> {
   const managedDir = resolve(hooksDir, MANAGED_SUBDIR);
 
   const managedLogicalPath = projectRelativeLogicalPath(projectRoot, managedDir);
-  if (/["\r\n]/.test(managedLogicalPath)) {
+  if (/["\\\r\n]/.test(managedLogicalPath)) {
     throw new Error(
-      `Generated hook command path cannot contain double quotes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
+      `Generated hook command path cannot contain double quotes, backslashes or line breaks: ${JSON.stringify(managedLogicalPath)}`,
     );
   }
   const loaded = await loadConfig(configPath);
@@ -74,6 +74,9 @@ export async function build(options: BuildOptions): Promise<void> {
     runtime,
   });
   const existingSettings = loadExistingSettings(settingsPath);
+  for (const command of staleManagedCommands(existingSettings, managedLogicalPath)) {
+    console.warn(`! Removing hook entry from outside ${managedLogicalPath}: ${command}`);
+  }
   const logicalBundledFiles = bundledFiles.map((file) => ({
     ...file,
     filePath: projectRelativeLogicalPath(projectRoot, file.filePath),

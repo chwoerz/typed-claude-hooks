@@ -1,6 +1,7 @@
 import { relative, resolve } from "node:path";
 import {
-  hasUnresolvedDependencies,
+  type DependencyPlan,
+  missingDependencies,
   npmInstall,
   planDependencySync,
   readDependencyState,
@@ -15,6 +16,11 @@ export interface EnsureSandboxOptions {
   install?: (sandboxDir: string) => void;
 }
 
+function installMessage(plan: DependencyPlan, missing: string[]): string {
+  if (plan.action === "install") return `Installing typed-claude-hooks@${plan.spec}...`;
+  return `Installing missing sandbox dependencies: ${missing.join(", ")}...`;
+}
+
 export function ensureSandbox(options: EnsureSandboxOptions): string[] {
   const { sandboxDir, version = cliVersion, install = npmInstall } = options;
   const created = scaffoldSandbox(sandboxDir, version);
@@ -24,10 +30,11 @@ export function ensureSandbox(options: EnsureSandboxOptions): string[] {
   }
 
   const plan = planDependencySync(readDependencyState(sandboxDir), version);
-  if (plan.action === "skip" && !hasUnresolvedDependencies(sandboxDir)) return created;
+  const missing = missingDependencies(sandboxDir);
+  if (plan.action === "skip" && missing.length === 0) return created;
 
   if (plan.action === "install") writeDeclaredSpec(sandboxDir, plan.spec);
-  console.log(`Installing typed-claude-hooks@${plan.spec}...`);
+  console.log(installMessage(plan, missing));
   install(sandboxDir);
   return created;
 }

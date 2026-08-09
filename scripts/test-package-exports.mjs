@@ -6,10 +6,11 @@ import { resolve } from "node:path";
 
 const projectRoot = resolve(import.meta.dirname, "..");
 const consumerRoot = mkdtempSync(resolve(tmpdir(), "tch-package-export-"));
+const npm = process.platform === "win32" ? "npm.cmd" : "npm";
 
 try {
   const packOutput = JSON.parse(
-    execFileSync("npm", ["pack", "--json", "--ignore-scripts", "--pack-destination", consumerRoot], {
+    execFileSync(npm, ["pack", "--json", "--ignore-scripts", "--pack-destination", consumerRoot], {
       cwd: projectRoot,
       encoding: "utf8",
     }),

@@ -42,7 +42,7 @@
     "lint": "biome lint src/ tests/",
     "check": "biome check src/ tests/",
     "prepublishOnly": "npm run build",
-    "release": "np --dry-run"
+    "release": "np"
   },
   "keywords": [
     "claude",

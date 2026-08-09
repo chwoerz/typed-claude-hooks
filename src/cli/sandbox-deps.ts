@@ -57,10 +57,10 @@ function readDevDependencies(manifest: Record<string, unknown> | undefined): Rec
   return devDependencies && typeof devDependencies === "object" ? (devDependencies as Record<string, string>) : {};
 }
 
-export function hasUnresolvedDependencies(sandboxDir: string): boolean {
+export function missingDependencies(sandboxDir: string): string[] {
   const manifest = readJson(resolve(sandboxDir, "package.json"));
   const names = [...Object.keys(readDependencies(manifest)), ...Object.keys(readDevDependencies(manifest))];
-  return names.some((name) => !existsSync(resolve(sandboxDir, "node_modules", name, "package.json")));
+  return names.filter((name) => !existsSync(resolve(sandboxDir, "node_modules", name, "package.json")));
 }
 
 export function writeDeclaredSpec(sandboxDir: string, spec: string): void {
@@ -74,7 +74,9 @@ export function writeDeclaredSpec(sandboxDir: string, spec: string): void {
 export function npmInstall(sandboxDir: string): void {
   const npm = process.platform === "win32" ? "npm.cmd" : "npm";
   try {
-    execFileSync(npm, ["install", "--prefix", sandboxDir], { stdio: "inherit" });
+    // --include=dev overrides an omit=dev coming from NODE_ENV=production or the user's .npmrc.
+    // Without it @types/node never lands in the sandbox and every run reinstalls it.
+    execFileSync(npm, ["install", "--include=dev", "--prefix", sandboxDir], { stdio: "inherit" });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     throw new Error(`npm install failed in ${sandboxDir}: ${message}`);

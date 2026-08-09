@@ -15,5 +15,8 @@ export function projectRelativeLogicalPath(
       );
     }
   }
-  return pathApi.relative(projectRoot, targetPath).replaceAll("\\", "/");
+  const relativePath = pathApi.relative(projectRoot, targetPath);
+  // Only Windows separators become "/" — on POSIX a backslash is part of the file name, and
+  // rewriting it would silently point the hook command at a different path.
+  return platform === "win32" ? relativePath.replaceAll("\\", "/") : relativePath;
 }

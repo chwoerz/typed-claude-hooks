@@ -19,7 +19,7 @@ Generated library source files are under `src/types/generated/`. Do not edit the
 
 The playground declaration manifest at `site/src/playground/generated/type-libraries.json` is generated build output. Do not edit or commit it; run `npm run prepare:playground-types` from `site/` after building the root package to regenerate it.
 
-CLI builds produce `.mjs` hook bundles plus mandatory shell wrappers (`.sh` or `.ps1`) and point hook entries in settings at the wrappers. Files under `.claude/hooks/` and managed hook entries in `.claude/settings.json` are build artifacts managed by `npx typed-claude-hooks build`.
+CLI builds produce `.mjs` hook bundles plus mandatory shell wrappers (`.sh` or `.ps1`) and point hook entries in settings at the wrappers. Files under `.claude/hooks/` and managed hook entries in `.claude/settings.json` are build artifacts managed by `npx typed-claude-hooks`. Any `typed-claude-hooks/<HookEvent>/` directory is the reserved managed namespace — a build strips those settings entries wherever they live, so leftovers from an earlier `--hooks-dir` are cleaned up. Removals from outside the current hooks directory are printed.
 
 # Site Development
 
