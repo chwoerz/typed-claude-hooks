@@ -1,8 +1,0 @@
-{
-  "name": "typed-claude-hooks-config",
-  "private": true,
-  "type": "module",
-  "dependencies": {
-    "typed-claude-hooks": "file:.."
-  }
-}
