@@ -1,6 +1,6 @@
 {
   "name": "typed-claude-hooks",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Type-safe Claude Code hooks in TypeScript",
   "type": "module",
   "main": "./dist/index.js",
